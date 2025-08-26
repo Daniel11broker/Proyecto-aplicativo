@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 500); }, 4000);
     };
 
-    const render = () => {
+    const render = (prefillData = null) => {
         loadData();
         syncInvoiceStatuses();
         if (currentView === 'list') {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             dom.invoiceListView.classList.add('hidden');
             dom.invoiceEditorView.classList.remove('hidden');
-            renderInvoiceEditorView(editingId);
+            renderInvoiceEditorView(editingId, prefillData);
         }
         feather.replace();
     };
@@ -186,8 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderInvoiceTable();
     };
 
-    const renderInvoiceEditorView = (invoiceId) => {
-        const invoice = invoiceId ? facturacionData.invoices.find(i => i.id == invoiceId) : {};
+    const renderInvoiceEditorView = (invoiceId, prefillData = null) => {
+        const invoice = invoiceId ? facturacionData.invoices.find(i => i.id == invoiceId) : (prefillData || {});
         const isEditable = !invoiceId || invoice.status === 'Borrador';
         const defaultIssueDate = new Date().toISOString().slice(0, 10);
         const defaultDueDate = new Date(); defaultDueDate.setDate(defaultDueDate.getDate() + config.paymentTermsDays);
@@ -246,9 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const addItemRow = (item = {}) => {
             const row = document.createElement('tr');
             if (isEditable) {
-                row.innerHTML = `<td class="p-2"><select class="w-full border rounded p-1 dark:bg-gray-700 item-product"><option value="">Seleccionar...</option>${productOptions}</select></td><td class="p-2"><input type="number" value="${item.quantity || 1}" min="1" class="w-full border rounded p-1 dark:bg-gray-700 item-quantity"></td><td class="p-2"><input type="number" value="${item.unitPrice || 0}" min="0" class="w-full border rounded p-1 dark:bg-gray-700 item-price"></td><td class="text-right p-2 item-total">${formatCurrency(item.total || 0)}</td><td class="p-2 text-center"><button type="button" class="text-red-500 remove-item-btn p-1"><i data-feather="trash-2" class="h-4 w-4"></i></button></td>`;
-                row.querySelector('.item-product').value = item.productId || "";
-                
+                row.innerHTML = `<td class="p-2"><input type="text" value="${item.name || ''}" class="w-full border rounded p-1 dark:bg-gray-700 item-name" placeholder="Descripción del servicio o producto"></td><td class="p-2"><input type="number" value="${item.quantity || 1}" min="1" class="w-full border rounded p-1 dark:bg-gray-700 item-quantity"></td><td class="p-2"><input type="number" value="${item.unitPrice || 0}" min="0" class="w-full border rounded p-1 dark:bg-gray-700 item-price"></td><td class="text-right p-2 item-total">${formatCurrency(item.total || 0)}</td><td class="p-2 text-center"><button type="button" class="text-red-500 remove-item-btn p-1"><i data-feather="trash-2" class="h-4 w-4"></i></button></td>`;
                 row.querySelector('.remove-item-btn').addEventListener('click', (e) => {
                     e.currentTarget.closest('tr').remove();
                     calculateTotals();
@@ -261,15 +259,17 @@ document.addEventListener('DOMContentLoaded', () => {
         (invoice?.items || (isEditable ? [{}] : [])).forEach(addItemRow);
         
         if (isEditable) {
-            const posCheckbox = document.getElementById('pos-client-checkbox');
             const clientSelect = document.getElementById('inv-client');
+            if (invoice.clientId) {
+                clientSelect.value = invoice.clientId;
+            }
+            const posCheckbox = document.getElementById('pos-client-checkbox');
             posCheckbox.addEventListener('change', (e) => {
                 clientSelect.disabled = e.target.checked;
                 if(e.target.checked) clientSelect.value = "";
             });
 
             document.getElementById('add-item-row-btn')?.addEventListener('click', () => { addItemRow(); feather.replace(); });
-            itemsBody.addEventListener('change', e => { if (e.target.classList.contains('item-product')) { const price = e.target.options[e.target.selectedIndex].dataset.price || 0; e.target.closest('tr').querySelector('.item-price').value = price; } calculateTotals(); });
             itemsBody.addEventListener('input', calculateTotals);
             document.getElementById('apply-retefuente').addEventListener('change', (e) => { document.getElementById('retefuente-details').classList.toggle('hidden', !e.target.checked); calculateTotals(); });
             document.getElementById('apply-reteica').addEventListener('change', (e) => { document.getElementById('reteica-details').classList.toggle('hidden', !e.target.checked); calculateTotals(); });
@@ -334,19 +334,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!client) { showToast('Debe seleccionar un cliente o marcar como Venta a Cliente Final.', 'error'); return null; }
         
         const items = Array.from(document.querySelectorAll('#inv-items-body tr')).map(row => {
-            const productSelect = row.querySelector('.item-product');
-            if (!productSelect) return null;
-            const product = inventoryData.find(p => p.id == productSelect.value);
             return {
-                productId: product?.id, name: product?.name,
+                name: row.querySelector('.item-name')?.value || 'Servicio/Producto',
                 quantity: parseFloat(row.querySelector('.item-quantity').value) || 0,
                 unitPrice: parseFloat(row.querySelector('.item-price').value) || 0,
                 total: (parseFloat(row.querySelector('.item-quantity').value) || 0) * (parseFloat(row.querySelector('.item-price').value) || 0),
             };
-        }).filter(Boolean);
+        }).filter(item => item.quantity > 0 && item.unitPrice > 0);
         
-        if (items.length === 0) { showToast('La factura debe tener al menos un producto.', 'error'); return null; }
-        if (isFinalizing) { for (const item of items) { const productInStock = inventoryData.find(p => p.id == item.productId); if (!productInStock || productInStock.quantity < item.quantity) { showToast(`Stock insuficiente para "${item.name}".`, 'error'); return null; } } }
+        if (items.length === 0) { showToast('La factura debe tener al menos un producto con cantidad y precio válidos.', 'error'); return null; }
         
         let subtotal = items.reduce((sum, item) => sum + item.total, 0);
         const iva = subtotal * config.IVA_RATE;
@@ -392,12 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalizeInvoice = (invoice, finalizeType) => {
         const invIndex = facturacionData.invoices.findIndex(i => i.id == invoice.id);
         if (invIndex === -1) return;
-
-        invoice.items.forEach(item => {
-            const pIndex = inventoryData.findIndex(p => p.id == item.productId);
-            if (pIndex > -1) inventoryData[pIndex].quantity -= item.quantity;
-        });
-        localStorage.setItem('inventory', JSON.stringify(inventoryData));
         
         if (finalizeType === 'credit') {
             let debtors = JSON.parse(localStorage.getItem('debtors')) || [];
@@ -432,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.text(`Fecha Emisión: ${formatDate(inv.issueDate)}`, 190, 30, { align: 'right' }); doc.text(`Vencimiento: ${formatDate(inv.dueDate)}`, 190, 35, { align: 'right' });
         doc.rect(15, 45, 180, 20); doc.setFont('helvetica', 'bold'); doc.text('Cliente:', 20, 52); doc.setFont('helvetica', 'normal'); doc.text(inv.clientName, 40, 52);
         
-        const head = [['Producto', 'Cant.', 'Precio Unit.', 'Total']];
+        const head = [['Producto/Servicio', 'Cant.', 'Precio Unit.', 'Total']];
         const body = inv.items.map(item => [item.name, item.quantity, formatCurrency(item.unitPrice), formatCurrency(item.total)]);
         doc.autoTable({ startY: 70, head: head, body: body, theme: 'grid', headStyles: { fillColor: [37, 99, 235] } });
         
@@ -496,7 +486,17 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.settingsModal.querySelector('#close-settings-btn').addEventListener('click', () => dom.settingsModal.classList.add('hidden'));
 
         loadData();
-        render();
+        
+        const invoiceFromCrm = localStorage.getItem('invoiceFromCrm');
+        if (invoiceFromCrm) {
+            const prefillData = JSON.parse(invoiceFromCrm);
+            localStorage.removeItem('invoiceFromCrm');
+            currentView = 'editor';
+            editingId = null;
+            render(prefillData);
+        } else {
+            render();
+        }
     };
     init();
 });

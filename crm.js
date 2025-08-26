@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toastContainer.appendChild(toastElement);
         feather.replace();
         setTimeout(() => toastElement.classList.add('show'), 10);
-        setTimeout(() => { toastElement.classList.remove('show'); setTimeout(() => toastElement.remove(), 500); }, 3000);
+        setTimeout(() => { toastElement.classList.remove('show'); setTimeout(() => toastElement.remove(), 500); }, 4000);
     };
     const toggleModal = (modalEl, show) => {
         if (show) {
@@ -142,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
         accounts: { title: 'Cuentas y Contactos', headers: ['Nombre Cuenta', 'Industria', 'Contactos', 'Acciones'] }
     };
 
-    // ================== INICIO DE LA FUNCIÓN CORREGIDA ==================
     const renderTable = (moduleKey) => {
         const config = moduleConfig[moduleKey];
         const tableSection = document.getElementById('table-section');
@@ -198,7 +197,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td class="${cellClass}">${formatCurrency(item.value)}</td>
                         <td class="${cellClass}"><span class="px-2 py-1 text-xs font-semibold rounded-full ${stageColor}">${item.stage}</span></td>
                         <td class="${cellClass}">${item.closeDate}</td>`;
-                    if(item.stage !== 'Cerrada Ganada' && item.stage !== 'Cerrada Perdida') actions += `<button onclick="window.handleOpportunityWon(${item.id})" class="text-green-600 hover:text-green-900 p-2 rounded-full hover:bg-green-100" title="Marcar como Ganada"><i data-feather="award"></i></button>`;
+                    if (item.stage === 'Cerrada Ganada') {
+                        actions += `<button onclick="window.generateInvoiceFromOpportunity(${item.id})" class="text-teal-600 hover:text-teal-900 p-2 rounded-full hover:bg-teal-100" title="Generar Factura"><i data-feather="file-text"></i></button>`;
+                    } else if (item.stage !== 'Cerrada Perdida') {
+                        actions += `<button onclick="window.handleOpportunityWon(${item.id})" class="text-green-600 hover:text-green-900 p-2 rounded-full hover:bg-green-100" title="Marcar como Ganada"><i data-feather="award"></i></button>`;
+                    }
                     break;
                 case 'accounts':
                     const contacts = crmData.contacts.filter(c => c.accountId == item.id);
@@ -219,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         feather.replace();
     };
-    // ================== FIN DE LA FUNCIÓN CORREGIDA ==================
 
     // --- 5. FORMS & EVENT HANDLERS ---
     const getAccountOptions = (selectedId) => crmData.accounts.map(a => `<option value="${a.id}" ${a.id == selectedId ? 'selected' : ''}>${a.name}</option>`).join('');
@@ -335,6 +337,37 @@ document.addEventListener('DOMContentLoaded', () => {
         crmData.leads = crmData.leads.filter(l => l.id != leadId);
         saveData(); render(); showToast('Prospecto convertido con éxito.');
     };
+    
+    // --- NUEVA FUNCIÓN PARA GENERAR FACTURA ---
+    window.generateInvoiceFromOpportunity = (opportunityId) => {
+        const opportunity = crmData.opportunities.find(o => o.id == opportunityId);
+        if (!opportunity) return showToast('Oportunidad no encontrada.', 'error');
+
+        const account = crmData.accounts.find(a => a.id == opportunity.accountId);
+        if (!account) return showToast('Cuenta asociada no encontrada.', 'error');
+
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
+        let client = clients.find(c => c.name.toLowerCase() === account.name.toLowerCase());
+
+        if (!client) {
+            client = { id: Date.now(), name: account.name };
+            clients.push(client);
+            localStorage.setItem('clients', JSON.stringify(clients));
+        }
+
+        const invoiceData = {
+            clientId: client.id,
+            items: [{
+                name: opportunity.name,
+                quantity: 1,
+                unitPrice: opportunity.value
+            }]
+        };
+
+        localStorage.setItem('invoiceFromCrm', JSON.stringify(invoiceData));
+        window.location.href = 'facturacion.html';
+    };
+
     window.handleEdit = (module, id) => openFormModal(module, id);
     window.handleDelete = (module, id) => {
         if (confirm('¿Seguro que deseas eliminar este registro?')) {
