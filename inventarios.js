@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
         localStorage.setItem('theme', newTheme);
         applyTheme(newTheme);
-        renderAll(); // Vuelve a dibujar el dashboard para actualizar colores del gráfico
+        renderAll(); 
     });
 
     // --- SELECTORES DOM Y ESTADO GLOBAL ---
@@ -45,11 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resetFiltersBtn: document.getElementById('reset-filters-btn'),
         paginationControls: document.getElementById('pagination-controls'),
         selectAllCheckbox: document.getElementById('select-all-checkbox'),
-        bulkActions: {
-            container: document.getElementById('bulk-actions-container'),
-            counter: document.getElementById('bulk-actions-counter'),
-            deleteBtn: document.getElementById('bulk-delete-btn'),
-        },
+        bulkActionsContainer: document.getElementById('bulk-actions-container'),
         modals: {
             product: document.getElementById('product-modal'),
             adjustment: document.getElementById('adjustment-modal'),
@@ -82,6 +78,43 @@ document.addEventListener('DOMContentLoaded', () => {
         state.inventory = JSON.parse(localStorage.getItem('inventory')) || [];
         state.movements = JSON.parse(localStorage.getItem('inventory_movements')) || [];
         state.suppliers = (JSON.parse(localStorage.getItem('compras_data_v1')) || { suppliers: [] }).suppliers;
+    };
+    
+    const processIncomingPurchaseOrder = () => {
+        const poDataString = localStorage.getItem('inventoryUpdateFromPO');
+        if (!poDataString) return;
+
+        const poData = JSON.parse(poDataString);
+        const poId = poData.purchaseOrderId;
+        let itemsUpdated = 0;
+
+        poData.items.forEach(item => {
+            const productIndex = state.inventory.findIndex(p => p.id == item.productId);
+            if (productIndex > -1) {
+                const oldQuantity = state.inventory[productIndex].quantity;
+                const quantityAdded = parseInt(item.quantity, 10);
+                const newQuantity = oldQuantity + quantityAdded;
+                state.inventory[productIndex].quantity = newQuantity;
+
+                state.movements.push({
+                    id: Date.now() + Math.random(),
+                    productId: parseInt(item.productId),
+                    date: new Date().toISOString().slice(0, 10),
+                    type: 'Entrada por Compra',
+                    quantityChange: `+${quantityAdded}`,
+                    newQuantity: newQuantity,
+                    reason: `OC #${poId}`
+                });
+                itemsUpdated++;
+            }
+        });
+
+        if (itemsUpdated > 0) {
+            saveData();
+            showToast(`${itemsUpdated} producto(s) recibidos y añadidos al stock.`);
+        }
+        
+        localStorage.removeItem('inventoryUpdateFromPO');
     };
     
     // --- UTILIDADES ---
@@ -120,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const getStockStatusInfo = (p) => {
         if (p.quantity <= 0) return { key: 'out_of_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">Agotado</span>' };
-        if (p.quantity <= p.reorderPoint) return { key: 'reorder', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300">Pedir</span>' };
-        if (p.quantity <= p.lowStockThreshold) return { key: 'low_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Stock Bajo</span>' };
+        if (p.reorderPoint > 0 && p.quantity <= p.reorderPoint) return { key: 'reorder', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300">Pedir</span>' };
+        if (p.lowStockThreshold > 0 && p.quantity <= p.lowStockThreshold) return { key: 'low_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Stock Bajo</span>' };
         return { key: 'in_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">En Stock</span>' };
     };
     
@@ -147,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.inventory.forEach(p => {
             totalValue += (p.salePrice || 0) * (p.quantity || 0);
-            if (p.quantity <= p.lowStockThreshold && p.quantity > 0) lowStockCount++;
+            if (p.quantity > 0 && p.quantity <= p.lowStockThreshold) lowStockCount++;
             statusCounts[getStockStatusInfo(p).key]++;
         });
 
@@ -204,10 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // El resto de la lógica de renderizado, modales, eventos, etc., se ha copiado y pegado
-    // de la versión original, ya que es funcional y robusta. Solo se han hecho
-    // pequeños ajustes para funcionar con el nuevo esquema de tema oscuro.
-    // ... Todo el código restante va aquí
     const populateSupplierFilter = () => {
         const currentVal = dom.supplierFilter.value;
         dom.supplierFilter.innerHTML = '<option value="">Todos los proveedores</option>';
@@ -218,7 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderTable = () => {
-        // 1. Filtrar
         let filteredInventory = state.inventory.filter(p => {
             const status = getStockStatusInfo(p).key;
             const matchesSearch = p.name.toLowerCase().includes(state.filters.search) || p.sku.toLowerCase().includes(state.filters.search);
@@ -227,30 +255,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return matchesSearch && matchesSupplier && matchesStatus;
         });
 
-        // 2. Ordenar
         filteredInventory.sort((a, b) => {
             const valA = a[state.sorting.by] || '';
             const valB = b[state.sorting.by] || '';
             const order = state.sorting.order === 'asc' ? 1 : -1;
-            if (typeof valA === 'string') {
-                return valA.localeCompare(valB) * order;
-            }
+            if (typeof valA === 'string') return valA.localeCompare(valB) * order;
             return (valA - valB) * order;
         });
 
-        // 3. Paginar
         state.pagination.totalItems = filteredInventory.length;
         const start = (state.pagination.currentPage - 1) * state.pagination.itemsPerPage;
         const end = start + state.pagination.itemsPerPage;
         const paginatedInventory = filteredInventory.slice(start, end);
 
-        // 4. Renderizar
         dom.tableBody.innerHTML = '';
         if (paginatedInventory.length === 0) {
+            dom.noDataMessage.classList.remove('hidden');
             dom.noDataMessage.innerHTML = `<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
                 <h3 class="mt-2 text-sm font-semibold">No hay productos</h3>
                 <p class="mt-1 text-sm text-gray-500">${state.inventory.length > 0 ? 'Ningún producto coincide con tu búsqueda.' : 'Empieza agregando tu primer producto.'}</p>`;
-            dom.noDataMessage.classList.remove('hidden');
         } else {
             dom.noDataMessage.classList.add('hidden');
         }
@@ -271,10 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <img src="${p.image || 'https://via.placeholder.com/40'}" alt="${p.name}" class="h-10 w-10 rounded-md object-cover cursor-pointer product-image" data-id="${p.id}">
-                        <div>
-                            <div class="font-medium">${p.name}</div>
-                            <div class="text-sm text-gray-500">SKU: ${p.sku}</div>
-                        </div>
+                        <div><div class="font-medium">${p.name}</div><div class="text-sm text-gray-500">SKU: ${p.sku}</div></div>
                     </div>
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-600">${p.location || 'N/A'}</td>
@@ -293,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         renderPagination();
         updateSortHeaders();
-        updateBulkActionsUI();
+        updateBulkActionsUI(paginatedInventory);
         feather.replace();
     };
     
@@ -337,15 +357,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const updateBulkActionsUI = () => {
+    const updateBulkActionsUI = (paginatedInventory = []) => {
         const selectedCount = state.selectedItems.size;
         if (selectedCount > 0) {
-            dom.bulkActions.container.classList.remove('hidden');
-            dom.bulkActions.counter.innerHTML = `<span class="font-semibold">${selectedCount} producto(s) seleccionado(s).</span>`;
+            dom.bulkActionsContainer.classList.remove('hidden');
+            dom.bulkActionsContainer.innerHTML = `<span class="font-semibold">${selectedCount} producto(s) seleccionado(s).</span><button id="bulk-delete-btn" class="text-red-600 font-semibold text-sm hover:underline">Eliminar Seleccionados</button>`;
+            document.getElementById('bulk-delete-btn').addEventListener('click', () => {
+                const selectedCountAtClick = state.selectedItems.size;
+                if (confirm(`¿Estás seguro de que quieres eliminar ${selectedCountAtClick} productos?`)) {
+                    state.inventory = state.inventory.filter(p => !state.selectedItems.has(p.id));
+                    state.selectedItems.clear();
+                    saveData();
+                    renderAll();
+                    showToast(`${selectedCountAtClick} productos eliminados`, 'error');
+                }
+            });
         } else {
-            dom.bulkActions.container.classList.add('hidden');
+            dom.bulkActionsContainer.classList.add('hidden');
         }
-        dom.selectAllCheckbox.checked = selectedCount > 0 && selectedCount === (document.querySelectorAll('.row-checkbox').length);
+        dom.selectAllCheckbox.checked = selectedCount > 0 && paginatedInventory.length > 0 && paginatedInventory.every(p => state.selectedItems.has(p.id));
     };
 
     const openProductModal = (product = null) => {
@@ -483,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'adjust': window.openAdjustmentModal(product); break;
                 case 'history': window.openHistoryModal(product); break;
                 case 'edit': openProductModal(product); break;
-                case 'delete': handleDeleteProduct(id); break;
+                case 'delete': deleteSingleProduct(id); break; // Renamed function
             }
         } else if (target.matches('.row-checkbox')) {
             if (target.checked) {
@@ -491,15 +521,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 state.selectedItems.delete(id);
             }
-            updateBulkActionsUI();
-            target.closest('tr').classList.toggle('bg-blue-50', target.checked);
-            target.closest('tr').classList.toggle('dark:bg-blue-900/20', target.checked);
+            renderTable();
         } else if (target.matches('.product-image')) {
             openImagePreviewModal(id);
         }
     };
     
-    const handleDeleteProduct = (id) => {
+    // RENAMED FUNCTION
+    const deleteSingleProduct = (id) => {
         if (confirm('¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.')) {
             state.inventory = state.inventory.filter(p => p.id !== id);
             saveData();
@@ -563,34 +592,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         dom.selectAllCheckbox.addEventListener('change', (e) => {
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            if (e.target.checked) {
-                checkboxes.forEach(cb => {
-                    state.selectedItems.add(parseInt(cb.dataset.id));
-                    cb.checked = true;
-                    cb.closest('tr').classList.add('bg-blue-50', 'dark:bg-blue-900/20');
-                });
-            } else {
-                checkboxes.forEach(cb => {
-                    state.selectedItems.delete(parseInt(cb.dataset.id));
-                    cb.checked = false;
-                     cb.closest('tr').classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
-                });
-            }
-            updateBulkActionsUI();
-        });
-        
-        dom.bulkActions.deleteBtn.addEventListener('click', () => {
-            if (confirm(`¿Estás seguro de que quieres eliminar ${state.selectedItems.size} productos?`)) {
-                state.inventory = state.inventory.filter(p => !state.selectedItems.has(p.id));
-                saveData();
-                state.selectedItems.clear();
-                renderAll();
-                showToast(`${state.selectedItems.size} productos eliminados`, 'error');
-            }
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                const id = parseInt(cb.dataset.id);
+                if (e.target.checked) {
+                    state.selectedItems.add(id);
+                } else {
+                    state.selectedItems.delete(id);
+                }
+            });
+            renderTable();
         });
     };
-    
+
+    // (The rest of the file remains unchanged)
+    // ...
     window.openAdjustmentModal = (product) => {
         dom.modals.adjustment.innerHTML = `
             <div class="bg-white dark:bg-gray-800 w-11/12 md:max-w-md mx-auto rounded-lg shadow-xl z-50">
@@ -749,10 +764,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         doc.save('reporte-inventario.pdf');
     };
+    
+    const setupEventsListeners = () => {
+        dom.addProductBtn.addEventListener('click', () => openProductModal());
+        dom.abcAnalysisBtn.addEventListener('click', openAbcAnalysisModal);
+        dom.profitabilityReportBtn.addEventListener('click', openProfitabilityReportModal);
+        dom.searchInput.addEventListener('input', handleFilterChange);
+        dom.supplierFilter.addEventListener('change', handleFilterChange);
+        dom.stockStatusFilter.addEventListener('change', handleFilterChange);
+        
+        dom.resetFiltersBtn.addEventListener('click', () => {
+            dom.searchInput.value = '';
+            dom.supplierFilter.value = '';
+            dom.stockStatusFilter.value = '';
+            handleFilterChange();
+        });
+
+        dom.importCsvBtn.addEventListener('click', () => dom.csvFileInput.click());
+        dom.csvFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleCsvImport(e.target.files[0]);
+            e.target.value = null;
+        });
+        
+        dom.exportCsvBtn.addEventListener('click', handleExportCsv);
+        dom.exportPdfBtn.addEventListener('click', handleExportPdf);
+        
+        dom.tableBody.addEventListener('click', handleTableClick);
+        document.querySelectorAll('.sortable').forEach(th => th.addEventListener('click', handleSort));
+
+        dom.paginationControls.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (button && button.dataset.page) {
+                state.pagination.currentPage = parseInt(button.dataset.page);
+                renderTable();
+            }
+        });
+        
+        dom.selectAllCheckbox.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            if (e.target.checked) {
+                checkboxes.forEach(cb => {
+                    state.selectedItems.add(parseInt(cb.dataset.id));
+                });
+            } else {
+                state.selectedItems.clear();
+            }
+            renderTable();
+        });
+    };
 
     const init = () => {
         applyTheme(localStorage.getItem('theme') || 'light');
         loadData();
+        processIncomingPurchaseOrder();
         renderAll();
         setupEventListeners();
     };

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Lógica del menú lateral y tema (Añadido) ---
+    // --- Lógica del menú lateral y tema ---
     const sidebar = document.getElementById('sidebar');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     if (window.innerWidth >= 768) {
@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(newTheme);
     });
 
-    // --- Lógica original de RRHH (Sin cambios) ---
-    
     // --- 1. CONFIG & GLOBALS ---
     const dom = {
         mainContent: document.getElementById('main-content'),
@@ -37,50 +35,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentView = 'list';
     let currentProfileId = null;
     let editingId = null;
+    let currentFormType = 'employee';
     let currentSearchTerm = '';
     let currentSort = { key: 'name', order: 'asc' };
 
     // --- 2. DATA HANDLING (UNIFIED) ---
     const loadAllEmployeeData = () => {
         const sstData = JSON.parse(localStorage.getItem('sgsst_data_v5')) || { employees: [] };
-        const nominaData = JSON.parse(localStorage.getItem('nomina_data_v1')) || { employees: [] };
-
-        let unifiedEmployees = sstData.employees.map(sstEmp => {
-            const nominaEmp = nominaData.employees.find(nEmp => nEmp.idNumber === sstEmp.idNumber);
-            return {
-                ...sstEmp,
-                baseSalary: nominaEmp ? nominaEmp.baseSalary : 0,
-                department: sstEmp.department || 'No Asignado',
-                status: sstEmp.status || 'Activo',
-                birthDate: sstEmp.birthDate || '',
-                phone: sstEmp.phone || '',
-                email: sstEmp.email || '',
-                address: sstEmp.address || '',
-                contractType: sstEmp.contractType || 'Término Indefinido',
-                contractStart: sstEmp.contractStart || '',
-                vacationDays: sstEmp.vacationDays === undefined ? 15 : sstEmp.vacationDays,
-                documents: sstEmp.documents || [],
-                attendance: sstEmp.attendance || [],
-                leaves: sstEmp.leaves || []
-            };
-        });
-        employeesData = unifiedEmployees;
+        employeesData = sstData.employees.map(emp => ({
+            ...emp,
+            department: emp.department || 'No Asignado',
+            status: emp.status || 'Activo',
+            baseSalary: emp.baseSalary || 0,
+            contractType: emp.contractType || 'Término Indefinido',
+            contractStart: emp.contractStart || '',
+            vacationDays: emp.vacationDays === undefined ? 15 : emp.vacationDays,
+            documents: emp.documents || [],
+            leaves: emp.leaves || []
+        }));
     };
 
     const saveAllEmployeeData = () => {
-        let sstData = { employees: [] };
-        let nominaData = { employees: [] };
+        let sstDataToSave = { employees: employeesData };
+        localStorage.setItem('sgsst_data_v5', JSON.stringify(sstDataToSave));
 
-        employeesData.forEach(unifiedEmp => {
-            sstData.employees.push(unifiedEmp);
-            nominaData.employees.push({
-                id: unifiedEmp.id, name: unifiedEmp.name, idNumber: unifiedEmp.idNumber,
-                position: unifiedEmp.position, baseSalary: unifiedEmp.baseSalary
-            });
-        });
-
-        localStorage.setItem('sgsst_data_v5', JSON.stringify(sstData));
-        localStorage.setItem('nomina_data_v1', JSON.stringify(nominaData));
+        let nominaDataToSave = { 
+            employees: employeesData.map(emp => ({
+                id: emp.id, name: emp.name, idNumber: emp.idNumber,
+                position: emp.position, baseSalary: emp.baseSalary
+            }))
+        };
+        const existingNominaData = JSON.parse(localStorage.getItem('nomina_data_v1')) || {};
+        localStorage.setItem('nomina_data_v1', JSON.stringify({ ...existingNominaData, ...nominaDataToSave }));
     };
 
     // --- 3. UTILITIES & PAYROLL ---
@@ -106,12 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const createPayrollNovelty = (novelty) => {
         let nominaData = JSON.parse(localStorage.getItem('nomina_data_v2')) || { novelties: [] };
+        if (!nominaData.novelties) nominaData.novelties = [];
         novelty.id = Date.now();
         novelty.status = 'pending';
         nominaData.novelties.push(novelty);
         localStorage.setItem('nomina_data_v2', JSON.stringify(nominaData));
         showToast(`Novedad '${novelty.concept}' enviada a Nómina.`, 'info');
     };
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 
     // --- 4. CORE ACTIONS ---
     const deleteEmployee = (employeeId) => {
@@ -127,16 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportToCSV = () => {
         const headers = ['ID', 'Nombre', 'Cedula', 'Cargo', 'Departamento', 'Estado', 'SalarioBase', 'FechaInicio'];
         const rows = employeesData.map(emp => [
-            emp.id,
-            `"${emp.name}"`,
-            emp.idNumber,
-            `"${emp.position}"`,
-            `"${emp.department}"`,
-            emp.status,
-            emp.baseSalary,
-            emp.contractStart
+            emp.id, `"${emp.name}"`, emp.idNumber, `"${emp.position}"`, `"${emp.department}"`,
+            emp.status, emp.baseSalary, emp.contractStart
         ].join(','));
-        
         const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -191,17 +177,16 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.employeeProfileView.classList.add('hidden');
         
         let content = renderDashboardKPIs();
-        content += `
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                    <div class="relative w-full md:w-auto"><input type="text" id="search-input" class="w-full p-2 pl-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Buscar..."><i data-feather="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i></div>
-                    <div class="flex items-center gap-2 w-full md:w-auto">
-                        <select id="sort-select" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"><option value="name-asc">Nombre (A-Z)</option><option value="name-desc">Nombre (Z-A)</option><option value="salary-desc">Salario (Mayor a Menor)</option><option value="salary-asc">Salario (Menor a Mayor)</option></select>
-                        <button id="export-csv-btn" class="p-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600" title="Exportar a CSV"><i data-feather="download"></i></button>
-                    </div>
-                    <button id="add-employee-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 flex items-center w-full md:w-auto justify-center"><i data-feather="plus" class="mr-2"></i>Nuevo Empleado</button>
+        content += `<div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                <div class="relative w-full md:w-auto"><input type="text" id="search-input" class="w-full p-2 pl-10 border rounded-lg dark:bg-gray-700 dark:border-gray-600" placeholder="Buscar..."><i data-feather="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i></div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <select id="sort-select" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"><option value="name-asc">Nombre (A-Z)</option><option value="name-desc">Nombre (Z-A)</option><option value="salary-desc">Salario (Mayor a Menor)</option><option value="salary-asc">Salario (Menor a Mayor)</option></select>
+                    <button id="export-csv-btn" class="p-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-600" title="Exportar a CSV"><i data-feather="download"></i></button>
                 </div>
-                <div id="employee-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                <button id="add-employee-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 flex items-center w-full md:w-auto justify-center"><i data-feather="plus" class="mr-2"></i>Nuevo Empleado</button>
+            </div>
+            <div id="employee-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
         
         let filteredEmployees = employeesData.filter(emp =>
             emp.name.toLowerCase().includes(currentSearchTerm) ||
@@ -303,9 +288,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><strong>Días de Vacaciones Disp.:</strong> <span class="font-bold text-lg">${emp.vacationDays}</span></div>
             </div>`;
         } else if (tabName === 'documents'){
-            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Documentos</h3><button onclick="window.openFormModal('document', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Añadir</button></div><ul>...</ul>`;
+            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Documentos del Empleado</h3><button onclick="window.openFormModal('document', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Añadir</button></div>`;
+            if (emp.documents && emp.documents.length > 0) {
+                 content += `<ul class="space-y-3 mt-4">${emp.documents.map(doc => `
+                    <li class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">${doc.name}</p>
+                            <p class="text-sm text-gray-500">${doc.type} - Cargado: ${new Date(doc.uploadDate).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                             <a href="${doc.fileData}" download="${doc.fileName}" class="text-blue-600 hover:text-blue-800" title="Descargar"><i data-feather="download"></i></a>
+                             <button onclick="window.deleteDocument(${emp.id}, ${doc.id})" class="text-red-500 hover:text-red-700" title="Eliminar"><i data-feather="trash-2"></i></button>
+                        </div>
+                    </li>`).join('')}</ul>`;
+            } else {
+                content += `<p class="text-gray-500 mt-4">No hay documentos cargados para este empleado.</p>`;
+            }
         } else if (tabName === 'leaves'){
-            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Ausencias</h3><button onclick="window.openFormModal('leave', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Registrar</button></div><ul>...</ul>`;
+            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Registro de Ausencias</h3><button onclick="window.openFormModal('leave', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Registrar Ausencia</button></div>`;
+            if (emp.leaves && emp.leaves.length > 0) {
+                content += `<ul class="space-y-3 mt-4">${emp.leaves.map(leave => `
+                    <li class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">${leave.type}</p>
+                            <p class="text-sm text-gray-500">${leave.startDate} a ${leave.endDate} (${leave.days} días)</p>
+                        </div>
+                        <span class="text-sm font-medium ${leave.isPaid ? 'text-green-600' : 'text-red-600'}">${leave.isPaid ? 'Remunerada' : 'No Remunerada'}</span>
+                    </li>`).join('')}</ul>`;
+            } else {
+                content += `<p class="text-gray-500 mt-4">No hay ausencias registradas para este empleado.</p>`;
+            }
         }
         container.innerHTML = content;
         feather.replace();
@@ -336,10 +348,38 @@ document.addEventListener('DOMContentLoaded', () => {
                  </div>
             </div>
             <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700"><button type="button" class="bg-gray-300 dark:bg-gray-600 py-2 px-4 rounded mr-2 hover:bg-gray-400 dark:hover:bg-gray-500" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Guardar</button></div>`,
+        document: (data = {}) => `
+            <input type="hidden" name="employeeId" value="${data.id}">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-medium">Nombre del Documento</label><input type="text" name="name" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Ej: Contrato, Hoja de Vida" required></div>
+                <div><label class="block text-sm font-medium">Tipo</label><input type="text" name="type" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Ej: Laboral, Académico" required></div>
+                <div><label class="block text-sm font-medium">Archivo</label><input type="file" name="file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100" required></div>
+            </div>
+            <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700"><button type="button" class="bg-gray-300 dark:bg-gray-600 py-2 px-4 rounded mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded">Subir Documento</button></div>`,
+        leave: (data = {}) => `
+            <input type="hidden" name="employeeId" value="${data.id}">
+            <div class="space-y-4">
+                <div><label class="block text-sm font-medium">Tipo de Ausencia</label>
+                    <select name="type" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600">
+                        <option>Licencia de Maternidad/Paternidad</option>
+                        <option>Incapacidad Médica</option>
+                        <option>Licencia No Remunerada</option>
+                        <option>Vacaciones</option>
+                        <option>Permiso Personal</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Fecha de Inicio</label><input type="date" name="startDate" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
+                    <div><label class="block text-sm font-medium">Fecha de Fin</label><input type="date" name="endDate" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
+                </div>
+                <div><label class="flex items-center"><input type="checkbox" name="isPaid" class="h-4 w-4 rounded border-gray-300 text-blue-600" checked><span class="ml-2">Es remunerada</span></label></div>
+            </div>
+            <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700"><button type="button" class="bg-gray-300 dark:bg-gray-600 py-2 px-4 rounded mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded">Registrar</button></div>`
     };
 
     window.openFormModal = (type, id = null) => {
         editingId = id;
+        currentFormType = type;
         const data = id ? employeesData.find(e => e.id == id) : {};
         const titles = { employee: 'Empleado', document: 'Nuevo Documento', leave: 'Registrar Ausencia' };
         dom.formModal.title.textContent = `${id && type === 'employee' ? 'Editar' : 'Nuevo'} ${titles[type]}`;
@@ -349,22 +389,55 @@ document.addEventListener('DOMContentLoaded', () => {
         feather.replace();
     };
     
-    dom.formModal.form.addEventListener('submit', (e) => {
+    dom.formModal.form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(dom.formModal.form);
         const data = Object.fromEntries(formData.entries());
+        const employeeId = parseInt(data.employeeId || editingId);
+        const employeeIndex = employeesData.findIndex(e => e.id === employeeId);
         
-        if (data.formType === 'document') { /* ... */ } 
-        else if (data.formType === 'leave') { /* ... */ } 
-        else { // Employee form
+        if (currentFormType === 'document') {
+            const file = formData.get('file');
+            if (file && file.size > 0) {
+                const fileData = await fileToBase64(file);
+                const newDoc = { id: Date.now(), name: data.name, type: data.type, uploadDate: new Date().toISOString(), fileName: file.name, fileData };
+                if (employeeIndex > -1) {
+                    employeesData[employeeIndex].documents.push(newDoc);
+                    showToast('Documento añadido con éxito.');
+                }
+            }
+        } else if (currentFormType === 'leave') {
+            if (employeeIndex > -1) {
+                const startDate = new Date(data.startDate);
+                const endDate = new Date(data.endDate);
+                const days = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                const newLeave = { 
+                    id: Date.now(), type: data.type, startDate: data.startDate, endDate: data.endDate,
+                    days: days, isPaid: data.isPaid === 'on' 
+                };
+                employeesData[employeeIndex].leaves.push(newLeave);
+                showToast('Ausencia registrada con éxito.');
+
+                if (!newLeave.isPaid) {
+                    createPayrollNovelty({
+                        period: data.startDate.substring(0, 7),
+                        employeeId: employeeId,
+                        type: 'deduccion',
+                        concept: `Deducción por ${days} día(s) de licencia no remunerada`,
+                        value: (employeesData[employeeIndex].baseSalary / 30) * days,
+                        addsToIBC: false
+                    });
+                }
+            }
+        } else { // Employee form
             data.baseSalary = parseFloat(data.baseSalary);
             if (editingId) {
-                const index = employeesData.findIndex(i => i.id == editingId);
-                employeesData[index] = { ...employeesData[index], ...data };
+                employeesData[employeeIndex] = { ...employeesData[employeeIndex], ...data, id: editingId };
                 showToast('Empleado actualizado.', 'success');
             } else {
                 data.id = Date.now();
-                data.documents = []; data.leaves = []; data.attendance = [];
+                data.documents = []; data.leaves = [];
                 employeesData.push(data);
                 showToast('Empleado creado.', 'success');
             }
@@ -374,6 +447,18 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         toggleModal(false);
     });
+
+    window.deleteDocument = (employeeId, docId) => {
+         if (confirm('¿Estás seguro de eliminar este documento?')) {
+            const empIndex = employeesData.findIndex(e => e.id === employeeId);
+            if(empIndex > -1) {
+                employeesData[empIndex].documents = employeesData[empIndex].documents.filter(d => d.id !== docId);
+                saveAllEmployeeData();
+                renderTabContent('documents', employeesData[empIndex]);
+                showToast('Documento eliminado.');
+            }
+         }
+    };
 
     dom.formModal.closeBtn.addEventListener('click', () => toggleModal(false));
 

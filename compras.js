@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Lógica del menú lateral y tema
+    // --- Lógica del menú lateral y tema ---
     const sidebar = document.getElementById('sidebar');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     if (window.innerWidth >= 768) {
@@ -34,18 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         comprasData = JSON.parse(localStorage.getItem('compras_data_v1')) || JSON.parse(JSON.stringify(defaultData));
         inventoryData = JSON.parse(localStorage.getItem('inventory')) || [];
     };
-    const updateInventoryStock = (items) => {
-        const currentInventory = JSON.parse(localStorage.getItem('inventory')) || [];
-        items.forEach(item => {
-            const productIndex = currentInventory.findIndex(p => p.id == item.productId);
-            if(productIndex > -1) {
-                currentInventory[productIndex].quantity = (parseInt(currentInventory[productIndex].quantity, 10) || 0) + (parseInt(item.quantity, 10) || 0);
-            }
-        });
-        localStorage.setItem('inventory', JSON.stringify(currentInventory));
-        showToast('¡Stock de inventario actualizado!');
-    };
-
+    
     // --- 3. UTILITIES ---
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
     const showToast = (message, type = 'success') => {
@@ -281,12 +270,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.markAsReceived = (id) => {
-        const po = comprasData.purchaseOrders.find(p => p.id == id);
-        if (po) {
-            po.status = 'Recibido';
-            updateInventoryStock(po.items);
+        const poIndex = comprasData.purchaseOrders.findIndex(p => p.id == id);
+        if (poIndex > -1) {
+            comprasData.purchaseOrders[poIndex].status = 'Recibido';
+            
+            // **NUEVA LÓGICA DE INTEGRACIÓN**
+            const receivedData = {
+                purchaseOrderId: id,
+                items: comprasData.purchaseOrders[poIndex].items
+            };
+            localStorage.setItem('inventoryUpdateFromPO', JSON.stringify(receivedData));
+            
             saveData();
             render();
+            showToast('Orden marcada como recibida. El inventario se actualizará.');
         }
     };
     window.registerPayment = (billId) => {

@@ -63,18 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const calculateMetrics = () => {
         const { startDate, endDate } = getDateRange();
         
+        // Métricas que dependen del período
         const filteredInvoices = allData.invoices.filter(inv => {
             const issueDate = new Date(inv.issueDate);
             return inv.status !== 'Borrador' && issueDate >= startDate && issueDate <= endDate;
         });
         const totalRevenue = filteredInvoices.reduce((sum, inv) => sum + inv.total, 0);
+
         const filteredBills = allData.bills.filter(bill => { const billDate = new Date(bill.date); return billDate >= startDate && billDate <= endDate; });
         const supplierExpenses = filteredBills.reduce((sum, bill) => sum + bill.total, 0);
+        
         const filteredPayrolls = allData.payrollHistory.filter(p => { const periodDate = new Date(p.period + '-02'); return periodDate >= startDate && periodDate <= endDate; });
         const payrollExpenses = filteredPayrolls.reduce((sum, p) => sum + p.records.reduce((s, r) => s + r.totalCompanyCost, 0), 0);
+
         const totalExpenses = supplierExpenses + payrollExpenses;
         const netProfit = totalRevenue - totalExpenses;
 
+        // Métricas que son un snapshot actual (no dependen del período)
         const totalCash = allData.accounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
         const pipelineValue = allData.opportunities.filter(o => !o.stage.startsWith('Cerrada')).reduce((sum, o) => sum + (o.value || 0), 0);
         const accountsReceivable = allData.debtors.reduce((sum, d) => sum + (d.balance || 0), 0);
@@ -106,10 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const { startDate } = getDateRange();
         const months = [], monthlyRevenue = {}, monthlyExpenses = {};
         let d = new Date(startDate);
+        d.setDate(1); // Asegurar que empezamos el primer día del mes
+
         while (d <= new Date()) {
             const monthKey = d.toISOString().slice(0, 7);
             months.push(monthKey);
-            monthlyRevenue[monthKey] = 0; monthlyExpenses[monthKey] = 0;
+            monthlyRevenue[monthKey] = 0; 
+            monthlyExpenses[monthKey] = 0;
             d.setMonth(d.getMonth() + 1);
         }
         allData.invoices.forEach(inv => { const k = inv.issueDate.slice(0, 7); if(monthlyRevenue[k] !== undefined) monthlyRevenue[k] += inv.total; });
