@@ -211,8 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><label class="block text-sm font-medium mb-1">Fecha Vencimiento</label><input type="date" id="inv-due-date" value="${invoice?.dueDate || defaultDueDateStr}" class="w-full border rounded p-2 dark:bg-gray-700" ${!isEditable ? 'disabled' : ''}></div>
                     </div>
                 </div>
-                <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50 dark:bg-gray-700"><tr><th class="p-2 text-left text-xs uppercase">Producto</th><th class="p-2 text-left text-xs uppercase w-24">Cantidad</th><th class="p-2 text-left text-xs uppercase w-40">Precio Unit.</th><th class="p-2 text-right text-xs uppercase w-40">Total</th>${isEditable ? '<th class="w-12"></th>' : ''}</tr></thead><tbody id="inv-items-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody></table></div>
-                ${isEditable && inventoryData.length > 0 ? `<button id="add-item-row-btn" class="mt-4 text-sm text-blue-600 hover:underline flex items-center"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Agregar línea</button>` : ''}
+                <div class="overflow-x-auto"><table class="w-full table-auto"><thead class="bg-gray-50 dark:bg-gray-700"><tr><th class="p-2 text-left text-xs uppercase">Producto/Servicio</th><th class="p-2 text-left text-xs uppercase w-24">Cantidad</th><th class="p-2 text-left text-xs uppercase w-40">Precio Unit.</th><th class="p-2 text-right text-xs uppercase w-40">Total</th>${isEditable ? '<th class="w-12"></th>' : ''}</tr></thead><tbody id="inv-items-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody></table></div>
+                ${isEditable ? `<button id="add-item-row-btn" class="mt-4 text-sm text-blue-600 hover:underline flex items-center"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Agregar línea</button>` : ''}
                 <div class="grid md:grid-cols-2 mt-8">
                     <div class="space-y-3 ${!isEditable ? 'hidden' : ''}">
                         <div class="p-3 border rounded-md dark:border-gray-600">
@@ -241,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupInvoiceEditor = (invoice, isEditable) => {
         document.getElementById('back-to-list-btn').addEventListener('click', () => { currentView = 'list'; render(); });
         const itemsBody = document.getElementById('inv-items-body');
-        const productOptions = inventoryData.map(p => `<option value="${p.id}" data-price="${p.salePrice}" ${p.quantity <= 0 ? 'disabled' : ''}>${p.name} (Stock: ${p.quantity})</option>`).join('');
         
         const addItemRow = (item = {}) => {
             const row = document.createElement('tr');
@@ -413,41 +412,84 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.editInvoice = (id) => { editingId = id; currentView = 'editor'; render(); };
     
-    window.generateInvoicePDF = (invoiceId) => {
-        const inv = facturacionData.invoices.find(i => i.id == invoiceId); if (!inv) return;
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.text('FACTURA DE VENTA', 105, 20, { align: 'center' });
+    // *** FUNCIÓN DE PDF ACTUALIZADA ***
+    window.generateInvoicePDF = async (invoiceId) => {
+        const inv = facturacionData.invoices.find(i => i.id == invoiceId);
+        if (!inv) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // --- Generar QR y CUFE (simulados) ---
+        const cufePlaceholder = Array(96).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=NumFac:${'FV-' + inv.invoiceNumber}%0ANitFac:9001234567%0ANitAdq:123456789%0AValFac:${inv.subtotal}%0AValIva:${inv.iva}%0AValOtroIm:%0AValTolFac:${inv.total}%0ACUFE:${cufePlaceholder.substring(0,20)}...`;
+
+        // --- Encabezado ---
+        doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.text('FACTURA ELECTRÓNICA DE VENTA', 105, 20, { align: 'center' });
         doc.setFontSize(12); doc.setFont('helvetica', 'normal'); doc.text(`FV-${inv.invoiceNumber}`, 190, 20, { align: 'right' });
         doc.setFontSize(10); doc.text(config.company.name, 20, 30); doc.text(`NIT: ${config.company.nit}`, 20, 35);
         doc.text(`Fecha Emisión: ${formatDate(inv.issueDate)}`, 190, 30, { align: 'right' }); doc.text(`Vencimiento: ${formatDate(inv.dueDate)}`, 190, 35, { align: 'right' });
+
+        // --- Datos del Cliente ---
         doc.rect(15, 45, 180, 20); doc.setFont('helvetica', 'bold'); doc.text('Cliente:', 20, 52); doc.setFont('helvetica', 'normal'); doc.text(inv.clientName, 40, 52);
         
+        // --- Tabla de Items ---
         const head = [['Producto/Servicio', 'Cant.', 'Precio Unit.', 'Total']];
         const body = inv.items.map(item => [item.name, item.quantity, formatCurrency(item.unitPrice), formatCurrency(item.total)]);
         doc.autoTable({ startY: 70, head: head, body: body, theme: 'grid', headStyles: { fillColor: [37, 99, 235] } });
         
         let finalY = doc.lastAutoTable.finalY + 10;
+        
+        // --- Totales ---
         doc.setFontSize(10);
         doc.text('Subtotal:', 140, finalY); doc.text(formatCurrency(inv.subtotal), 190, finalY, { align: 'right' });
-        doc.text(`IVA (${(config.IVA_RATE * 100).toFixed(0)}%):`, 140, finalY + 7); doc.text(formatCurrency(inv.iva), 190, finalY + 7, { align: 'right' });
         finalY += 7;
-        doc.setFont(undefined, 'bold'); doc.text('TOTAL:', 140, finalY + 7); doc.text(formatCurrency(inv.total), 190, finalY + 7, { align: 'right' });
+        doc.text(`IVA (${(config.IVA_RATE * 100).toFixed(0)}%):`, 140, finalY); doc.text(formatCurrency(inv.iva), 190, finalY, { align: 'right' });
         finalY += 7;
-
-        if (inv.retencionFuente > 0) {
-            finalY += 7;
-            doc.setFont(undefined, 'normal'); doc.text(`(-) Retefuente (${(inv.retefuenteRate * 100).toFixed(2)}%):`, 140, finalY); doc.text(formatCurrency(-inv.retencionFuente), 190, finalY, { align: 'right' });
-        }
-        if (inv.retencionICA > 0) {
-            finalY += 7;
-            doc.setFont(undefined, 'normal'); doc.text(`(-) ReteICA (${(inv.reteicaRate * 1000).toFixed(3)}‰):`, 140, finalY); doc.text(formatCurrency(-inv.retencionICA), 190, finalY, { align: 'right' });
-        }
+        doc.setFont(undefined, 'bold'); doc.text('TOTAL:', 140, finalY); doc.text(formatCurrency(inv.total), 190, finalY, { align: 'right' });
+        
         if (inv.retencionFuente > 0 || inv.retencionICA > 0) {
             finalY += 7;
-             doc.setFont(undefined, 'bold'); doc.text('NETO A PAGAR:', 140, finalY); doc.text(formatCurrency(inv.total - inv.retencionFuente - inv.retencionICA), 190, finalY, { align: 'right' });
+            doc.setLineDashPattern([1, 1], 0); doc.line(138, finalY, 192, finalY); doc.setLineDashPattern([], 0); finalY += 4;
+            if (inv.retencionFuente > 0) {
+                finalY += 7;
+                doc.setFont(undefined, 'normal'); doc.text(`(-) Retefuente (${(inv.retefuenteRate * 100).toFixed(2)}%):`, 140, finalY); doc.text(formatCurrency(-inv.retencionFuente), 190, finalY, { align: 'right' });
+            }
+            if (inv.retencionICA > 0) {
+                finalY += 7;
+                doc.setFont(undefined, 'normal'); doc.text(`(-) ReteICA (${(inv.reteicaRate * 1000).toFixed(3)}‰):`, 140, finalY); doc.text(formatCurrency(-inv.retencionICA), 190, finalY, { align: 'right' });
+            }
+            finalY += 7;
+            doc.setFont(undefined, 'bold'); doc.text('NETO A PAGAR:', 140, finalY); doc.text(formatCurrency(inv.total - inv.retencionFuente - inv.retencionICA), 190, finalY, { align: 'right' });
         }
-
-        doc.save(`Factura-FV-${inv.invoiceNumber}.pdf`);
+        
+        // --- QR y CUFE ---
+        // Usar un fetch para obtener la imagen del QR
+        try {
+            const response = await fetch(qrApiUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                const base64data = reader.result;
+                doc.addImage(base64data, 'JPEG', 20, finalY + 15, 30, 30);
+                
+                doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+                doc.text('CUFE:', 55, finalY + 18);
+                doc.setFont('courier', 'normal');
+                const cufeLines = doc.splitTextToSize(cufePlaceholder, 135);
+                doc.text(cufeLines, 55, finalY + 22);
+                
+                doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+                doc.text("Representación gráfica de la Factura Electrónica de Venta.", 20, finalY + 50);
+                doc.text("Resolución Facturación DIAN N° 18760000001 del 2024-01-01. Rango del 1 al 5000.", 20, finalY + 54);
+                
+                doc.save(`Factura-FV-${inv.invoiceNumber}.pdf`);
+            };
+        } catch (error) {
+            console.error("Error fetching QR code:", error);
+            doc.save(`Factura-FV-${inv.invoiceNumber}.pdf`); // Guardar sin QR si falla
+        }
     };
 
     const openSettingsModal = () => {
