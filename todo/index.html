@@ -21,13 +21,20 @@
                 <i data-feather="briefcase" class="h-8 w-8 text-blue-600"></i>
                 <h1 class="text-xl font-bold ml-2">Suite Empresarial</h1>
             </div>
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="#modulos" class="hover:text-blue-600">Módulos</a>
-                <a href="#precios" class="hover:text-blue-600">Precios</a>
-                <a href="#nosotros" class="hover:text-blue-600">Nosotros</a>
-                <a href="#contacto" class="hover:text-blue-600">Contacto</a>
+            
+            <nav class="hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-lg md:shadow-none md:static md:flex md:items-center md:bg-transparent dark:md:bg-transparent">
+                <div class="flex flex-col md:flex-row md:space-x-6">
+                    <a href="#modulos" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Módulos</a>
+                    <a href="#precios" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Precios</a>
+                    <a href="#nosotros" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Nosotros</a>
+                    <a href="#contacto" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Contacto</a>
+                </div>
             </nav>
+
             <div class="flex items-center gap-4">
+                <a href="./plan gratis/inicio.html" class="hidden md:block border border-blue-600 text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 dark:text-white dark:hover:bg-gray-700 transition-colors">
+                    Plan Gratis
+                </a>
                 <a href="./login.html" class="hidden md:block bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors">
                     Ingresar
                 </a>
@@ -35,7 +42,7 @@
                     <i data-feather="sun" class="h-5 w-5 block dark:hidden"></i>
                     <i data-feather="moon" class="h-5 w-5 hidden dark:block"></i>
                 </button>
-                <button id="mobile-menu-button" class="md:hidden">
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                     <i data-feather="menu"></i>
                 </button>
             </div>
@@ -138,24 +145,25 @@
                     <p class="text-gray-500 mt-2">Precios claros y sin sorpresas, pensados para empresas en crecimiento.</p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll">
-                        <h4 class="text-xl font-semibold mb-2">Básico</h4>
-                        <p class="text-4xl font-bold mb-4">$129.000<span class="text-lg font-normal">/mes</span></p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2">
-                            <li>Hasta 5 usuarios</li>
-                            <li>Módulos de Finanzas y CRM</li>
-                            <li>Soporte básico</li>
+                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll flex flex-col h-full">
+                        <h4 class="text-xl font-semibold mb-2">Gratis</h4>
+                        <p class="text-4xl font-bold mb-4">$0</p>
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
+                            <li>1 Usuario</li>
+                            <li>Módulos limitados</li>
+                            <li>Información local (no en la nube)</li>
+                            <li>Almacenamiento limitado de imágenes y documentos</li>
                         </ul>
-                        <a href="#" class="mt-8 block bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                            Elegir Plan
+                        <a href="./plan gratis/inicio.html" class="mt-8 block bg-gray-200 text-gray-800 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
+                            Empezar Gratis
                         </a>
                     </div>
-                    <div class="pricing-card border-2 border-blue-600 p-6 rounded-lg text-center relative animate-on-scroll">
+                    <div class="pricing-card border-2 border-blue-600 p-6 rounded-lg text-center relative animate-on-scroll flex flex-col h-full">
                         <span class="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">Más Popular</span>
                         <h4 class="text-xl font-semibold mb-2">Pro</h4>
                         <p class="text-4xl font-bold mb-4">$299.000<span class="text-lg font-normal">/mes</span></p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2">
-                            <li>Hasta 20 usuarios</li>
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
+                            <li>Hasta 5 usuarios</li>
                             <li>Todos los módulos incluidos</li>
                             <li>Soporte prioritario</li>
                         </ul>
@@ -163,10 +171,10 @@
                             Elegir Plan
                         </a>
                     </div>
-                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll">
+                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll flex flex-col h-full">
                         <h4 class="text-xl font-semibold mb-2">Corporativo</h4>
                         <p class="text-4xl font-bold mb-4">Contáctanos</p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2">
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
                             <li>Usuarios ilimitados</li>
                             <li>Integraciones personalizadas</li>
                             <li>Soporte dedicado</li>

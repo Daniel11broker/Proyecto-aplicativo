@@ -22,13 +22,17 @@
 
     <nav id="sidebar" class="fixed top-0 left-0 h-full bg-white dark:bg-gray-800 shadow-lg z-50 flex flex-col transition-all overflow-hidden">
         <div class="flex items-center justify-center h-16 border-b dark:border-gray-700 flex-shrink-0 px-4">
-            <a href="#" class="flex items-center space-x-3">
+            <a href="./inicio.html" class="flex items-center space-x-3">
                 <i data-feather="briefcase" class="h-8 w-8 text-blue-600 flex-shrink-0"></i>
                 <span class="sidebar-text text-xl font-bold text-gray-800 dark:text-white">Suite Empresarial</span>
             </a>
         </div>
         <div class="flex-grow overflow-y-auto overflow-x-hidden">
             <div class="flex flex-col py-4 space-y-1">
+                 <a href="./inicio.html" class="flex items-center h-12 px-6 text-blue-600 bg-blue-50 dark:bg-gray-700 dark:text-blue-300 font-semibold" title="Inicio">
+                    <i data-feather="home" class="h-6 w-6 flex-shrink-0"></i>
+                    <span class="sidebar-text">Inicio</span>
+                </a>
                 <a href="./resportes.html" class="flex items-center h-12 px-6 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" title="Reportes"><i data-feather="pie-chart" class="h-6 w-6 flex-shrink-0"></i><span class="sidebar-text">Reportes</span></a>
                 <a href="./tesoreria.html" class="flex items-center h-12 px-6 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" title="Tesorería"><i data-feather="activity" class="h-6 w-6 flex-shrink-0"></i><span class="sidebar-text">Tesorería</span></a>
                 <a href="./facturacion.html" class="flex items-center h-12 px-6 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" title="Facturación"><i data-feather="file-text" class="h-6 w-6 flex-shrink-0"></i><span class="sidebar-text">Facturación</span></a>
@@ -119,7 +123,7 @@
     <div id="reminder-modal" class="fixed inset-0 w-full h-full flex items-center justify-center z-50 hidden transition-all modal-backdrop"><div class="bg-white dark:bg-gray-800 w-11/12 md:max-w-lg mx-auto rounded-lg shadow-xl z-50"><div class="py-4 text-left px-6"><div class="flex justify-between items-center pb-3"><p class="text-2xl font-bold">Generar Recordatorio de Cobro</p><button id="close-reminder-modal-btn" class="cursor-pointer z-50"><i data-feather="x" class="text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"></i></button></div><div class="space-y-4"><p class="text-sm text-gray-600 dark:text-gray-400">Este es un mensaje sugerido. Puedes editarlo antes de copiarlo.</p><textarea id="reminder-message" rows="6" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md"></textarea><button id="copy-reminder-btn" class="w-full bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center"><i data-feather="copy" class="mr-2 h-5 w-5"></i> Copiar Mensaje</button></div></div></div></div>
     <div id="toast-container"></div>
 
-    <script src="cobranza.html"></script>
+    <script src="cobranza.js"></script>
     <script>
         feather.replace();
     </script>

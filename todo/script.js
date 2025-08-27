@@ -24,8 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Lógica del Menú Móvil ---
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.querySelector('header nav');
+    const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+    // Abrir/cerrar menú
     mobileMenuButton.addEventListener('click', () => {
         mobileMenu.classList.toggle('hidden');
+    });
+
+    // Cerrar menú al hacer clic en un enlace
+    mobileMenuLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
     });
 
     // --- Lógica de Scroll Suave ---
@@ -51,23 +61,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     animatedElements.forEach(el => observer.observe(el));
-});document.addEventListener('DOMContentLoaded', () => {
-    feather.replace();
-
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.querySelector('header nav');
-
-    mobileMenuButton.addEventListener('click', () => {
-        mobileMenu.classList.toggle('hidden');
-    });
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-    });
 });
