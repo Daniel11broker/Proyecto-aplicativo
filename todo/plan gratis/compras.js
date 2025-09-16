@@ -297,6 +297,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 bill.balance = 0;
                 bill.status = 'Pagada';
             }
+
+            // Integración con Tesorería
+            const tesoreriaData = JSON.parse(localStorage.getItem('tesoreria_data_v1')) || { accounts: [], manualTransactions: [] };
+            if(tesoreriaData.accounts.length > 0) {
+                const primaryAccount = tesoreriaData.accounts[0].id;
+                const newTransaction = {
+                    id: Date.now(),
+                    date: new Date().toISOString().slice(0,10),
+                    accountId: primaryAccount,
+                    type: 'outflow',
+                    description: `Pago Factura Proveedor #${bill.invoiceNumber}`,
+                    amount: payment
+                };
+                tesoreriaData.manualTransactions.push(newTransaction);
+                localStorage.setItem('tesoreria_data_v1', JSON.stringify(tesoreriaData));
+                showToast(`Egreso de ${formatCurrency(payment)} registrado en Tesorería.`, 'info');
+            } else {
+                showToast('Pago registrado, pero no se encontró cuenta en Tesorería para el egreso.', 'error');
+            }
+
             saveData();
             render();
             showToast('Pago registrado con éxito.');

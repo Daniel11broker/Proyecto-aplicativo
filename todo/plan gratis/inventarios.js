@@ -53,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
             barcode: document.getElementById('barcode-modal'),
             abcAnalysis: document.getElementById('abc-analysis-modal'),
             profitability: document.getElementById('profitability-report-modal'),
-            imagePreview: document.getElementById('image-preview-modal'),
         },
     };
 
@@ -157,13 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.lowStockThreshold > 0 && p.quantity <= p.lowStockThreshold) return { key: 'low_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Stock Bajo</span>' };
         return { key: 'in_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">En Stock</span>' };
     };
-    
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
 
     // --- RENDERIZADO PRINCIPAL ---
     const renderAll = () => {
@@ -293,7 +285,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-4 py-3 text-center"><input type="checkbox" class="row-checkbox" data-id="${p.id}" ${state.selectedItems.has(p.id) ? 'checked' : ''}></td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
-                        <img src="${p.image || 'https://via.placeholder.com/40'}" alt="${p.name}" class="h-10 w-10 rounded-md object-cover cursor-pointer product-image" data-id="${p.id}">
                         <div><div class="font-medium">${p.name}</div><div class="text-sm text-gray-500">SKU: ${p.sku}</div></div>
                     </div>
                 </td>
@@ -391,13 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="close-modal-btn cursor-pointer z-50 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="x"></i></button>
                     </div>
                     <form id="product-form" class="mt-4 max-h-[80vh] overflow-y-auto pr-2 space-y-4">
-                        <div class="flex items-center gap-4">
-                            <img id="image-preview" src="${product?.image || 'https://via.placeholder.com/100'}" class="h-24 w-24 rounded-lg object-cover">
-                            <div>
-                                <label class="block text-sm font-medium">Imagen del Producto</label>
-                                <input type="file" name="image" class="mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100" accept="image/*">
-                            </div>
-                        </div>
                         <input type="hidden" name="id" value="${product?.id || ''}">
                         <div><label class="block text-sm font-medium">Nombre del Producto</label><input type="text" name="name" value="${product?.name || ''}" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
                         <div class="grid md:grid-cols-2 gap-4">
@@ -430,16 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         dom.modals.product.querySelector('#product-form').addEventListener('submit', handleProductSubmit);
         dom.modals.product.querySelectorAll('.close-modal-btn').forEach(btn => btn.onclick = () => toggleModal(dom.modals.product, false));
-        dom.modals.product.querySelector('input[name="image"]').addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    document.getElementById('image-preview').src = event.target.result;
-                }
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
-
+        
         toggleModal(dom.modals.product, true);
         feather.replace();
     };
@@ -453,22 +428,16 @@ document.addEventListener('DOMContentLoaded', () => {
             id: state.editingProductId || Date.now(), name: data.name, sku: data.sku, category: data.category, description: data.description,
             costPrice: parseFloat(data.costPrice), salePrice: parseFloat(data.salePrice),
             quantity: parseInt(data.quantity), lowStockThreshold: parseInt(data.lowStockThreshold), reorderPoint: parseInt(data.reorderPoint),
-            batch: data.batch, expiryDate: data.expiryDate, supplierId: data.supplierId, location: data.location, image: null
+            batch: data.batch, expiryDate: data.expiryDate, supplierId: data.supplierId, location: data.location
         };
 
         if (state.inventory.some(p => p.sku.toLowerCase() === productData.sku.toLowerCase() && p.id !== productData.id)) {
             return showToast('El SKU ya existe. Debe ser único.', 'error');
         }
 
-        const imageFile = formData.get('image');
-        if (imageFile && imageFile.size > 0) {
-            productData.image = await fileToBase64(imageFile);
-        }
-
         if (state.editingProductId) {
             const index = state.inventory.findIndex(p => p.id === state.editingProductId);
             productData.quantity = state.inventory[index].quantity;
-            if (!productData.image) productData.image = state.inventory[index].image;
             state.inventory[index] = productData;
             showToast('Producto actualizado con éxito');
         } else {
@@ -486,20 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleModal(dom.modals.product, false);
     };
 
-    const openImagePreviewModal = (productId) => {
-        const product = state.inventory.find(p => p.id === productId);
-        if (!product || !product.image) return;
-
-        dom.modals.imagePreview.innerHTML = `
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl max-w-lg w-11/12">
-                 <img src="${product.image}" alt="${product.name}" class="w-full h-auto object-contain rounded-md max-h-[80vh]">
-                 <p class="text-center font-semibold mt-2">${product.name}</p>
-            </div>`;
-        toggleModal(dom.modals.imagePreview, true);
-    };
-
     const handleTableClick = (e) => {
-        const target = e.target.closest('.action-btn, .row-checkbox, .product-image');
+        const target = e.target.closest('.action-btn, .row-checkbox');
         if (!target) return;
         
         const id = parseInt(target.dataset.id);
@@ -513,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'adjust': window.openAdjustmentModal(product); break;
                 case 'history': window.openHistoryModal(product); break;
                 case 'edit': openProductModal(product); break;
-                case 'delete': deleteSingleProduct(id); break; // Renamed function
+                case 'delete': deleteSingleProduct(id); break;
             }
         } else if (target.matches('.row-checkbox')) {
             if (target.checked) {
@@ -522,12 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.selectedItems.delete(id);
             }
             renderTable();
-        } else if (target.matches('.product-image')) {
-            openImagePreviewModal(id);
         }
     };
     
-    // RENAMED FUNCTION
     const deleteSingleProduct = (id) => {
         if (confirm('¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer.')) {
             state.inventory = state.inventory.filter(p => p.id !== id);

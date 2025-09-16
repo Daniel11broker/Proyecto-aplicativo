@@ -23,11 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
             accountsPayable: document.getElementById('kpi-accounts-payable'),
             inventoryValue: document.getElementById('kpi-inventory-value'),
             employeeCount: document.getElementById('kpi-employee-count'),
+            payrollCost: document.getElementById('kpi-payroll-cost'), // Nuevo KPI
         },
         charts: {
             monthlyPnl: document.getElementById('monthly-pnl-chart')?.getContext('2d'),
             assetsLiabilities: document.getElementById('assets-liabilities-chart')?.getContext('2d'),
             topClients: document.getElementById('top-clients-chart')?.getContext('2d'),
+            revenuePayroll: document.getElementById('revenue-payroll-chart')?.getContext('2d'), // Nuevo Gráfico
         }
     };
     
@@ -63,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const calculateMetrics = () => {
         const { startDate, endDate } = getDateRange();
         
-        // Métricas que dependen del período
         const filteredInvoices = allData.invoices.filter(inv => {
             const issueDate = new Date(inv.issueDate);
             return inv.status !== 'Borrador' && issueDate >= startDate && issueDate <= endDate;
@@ -79,15 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalExpenses = supplierExpenses + payrollExpenses;
         const netProfit = totalRevenue - totalExpenses;
 
-        // Métricas que son un snapshot actual (no dependen del período)
         const totalCash = allData.accounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
         const pipelineValue = allData.opportunities.filter(o => !o.stage.startsWith('Cerrada')).reduce((sum, o) => sum + (o.value || 0), 0);
         const accountsReceivable = allData.debtors.reduce((sum, d) => sum + (d.balance || 0), 0);
         const accountsPayable = allData.bills.filter(b => b.status !== 'Pagada').reduce((sum, b) => sum + (b.balance || 0), 0);
         const inventoryValue = allData.inventory.reduce((sum, p) => sum + ((p.costPrice || 0) * (p.quantity || 0)), 0);
         const employeeCount = allData.employees.filter(e => e.status === 'Activo').length;
-
-        return { netProfit, totalCash, pipelineValue, accountsReceivable, accountsPayable, inventoryValue, employeeCount, filteredInvoices };
+        
+        return { netProfit, totalCash, pipelineValue, accountsReceivable, accountsPayable, inventoryValue, employeeCount, payrollExpenses, filteredInvoices };
     };
 
     const renderDashboard = () => {
@@ -101,17 +101,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.kpi.accountsPayable.textContent = formatCurrency(metrics.accountsPayable);
         dom.kpi.inventoryValue.textContent = formatCurrency(metrics.inventoryValue);
         dom.kpi.employeeCount.textContent = metrics.employeeCount;
+        dom.kpi.payrollCost.textContent = formatCurrency(metrics.payrollExpenses);
 
         renderPnlChart();
         renderAssetsLiabilitiesChart(metrics);
         renderTopClientsChart(metrics.filteredInvoices);
+        renderRevenuePayrollChart();
     };
     
     const renderPnlChart = () => {
         const { startDate } = getDateRange();
         const months = [], monthlyRevenue = {}, monthlyExpenses = {};
         let d = new Date(startDate);
-        d.setDate(1); // Asegurar que empezamos el primer día del mes
+        d.setDate(1);
 
         while (d <= new Date()) {
             const monthKey = d.toISOString().slice(0, 7);
@@ -194,6 +196,48 @@ document.addEventListener('DOMContentLoaded', () => {
                     y: { ticks: { color: textColor }, grid: { display: false } }
                 },
                 plugins: { legend: { display: false } }
+            }
+        });
+    };
+
+    const renderRevenuePayrollChart = () => {
+        const { startDate } = getDateRange();
+        const months = [], monthlyRevenue = {}, monthlyPayroll = {};
+        let d = new Date(startDate);
+        d.setDate(1);
+
+        while(d <= new Date()){
+            const monthKey = d.toISOString().slice(0,7);
+            months.push(monthKey);
+            monthlyRevenue[monthKey] = 0;
+            monthlyPayroll[monthKey] = 0;
+            d.setMonth(d.getMonth() + 1);
+        }
+
+        allData.invoices.forEach(inv => { const k = inv.issueDate.slice(0,7); if(monthlyRevenue[k] !== undefined) monthlyRevenue[k] += inv.total; });
+        allData.payrollHistory.forEach(p => { const k = p.period; if(monthlyPayroll[k] !== undefined) monthlyPayroll[k] += p.records.reduce((s, r) => s + r.totalCompanyCost, 0); });
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const textColor = isDark ? '#e5e7eb' : '#374151';
+
+        if (charts.revenuePayroll) charts.revenuePayroll.destroy();
+        charts.revenuePayroll = new Chart(dom.charts.revenuePayroll, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    { label: 'Ingresos', data: months.map(m => monthlyRevenue[m]), borderColor: 'rgba(34, 197, 94, 1)', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.3 },
+                    { label: 'Costo de Nómina', data: months.map(m => monthlyPayroll[m]), borderColor: 'rgba(239, 68, 68, 1)', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { ticks: { color: textColor }, grid: { color: gridColor } },
+                    x: { ticks: { color: textColor }, grid: { color: gridColor } }
+                },
+                plugins: { legend: { labels: { color: textColor } } }
             }
         });
     };

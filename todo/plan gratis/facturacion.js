@@ -272,6 +272,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const applyTheme=(theme)=>document.documentElement.classList.toggle('dark',theme==='dark');applyTheme(localStorage.getItem('theme')||'light');
         document.body.addEventListener('click',e=>{if(e.target.closest('#theme-toggle')){const newTheme=document.documentElement.classList.contains('dark')?'light':'dark';localStorage.setItem('theme',newTheme);applyTheme(newTheme);}});
         loadData();
+        // --- NUEVO: Procesar datos de CRM al cargar ---
+        const invoiceFromCrm = localStorage.getItem('invoiceFromCrm');
+        if (invoiceFromCrm) {
+            prefilledData = JSON.parse(invoiceFromCrm);
+            localStorage.removeItem('invoiceFromCrm');
+            currentView = 'editor';
+        }
         setTimeout(render,0);
     };
     

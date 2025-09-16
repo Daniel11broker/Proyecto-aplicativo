@@ -99,12 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('nomina_data_v2', JSON.stringify(nominaData));
         showToast(`Novedad '${novelty.concept}' enviada a Nómina.`, 'info');
     };
-    const fileToBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
 
     // --- 4. CORE ACTIONS ---
     const deleteEmployee = (employeeId) => {
@@ -190,8 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let filteredEmployees = employeesData.filter(emp =>
             emp.name.toLowerCase().includes(currentSearchTerm) ||
-            emp.idNumber.toLowerCase().includes(currentSearchTerm) ||
-            emp.department.toLowerCase().includes(currentSearchTerm)
+            (emp.idNumber && emp.idNumber.toLowerCase().includes(currentSearchTerm)) ||
+            (emp.department && emp.department.toLowerCase().includes(currentSearchTerm))
         );
 
         filteredEmployees.sort((a, b) => {
@@ -288,21 +282,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div><strong>Días de Vacaciones Disp.:</strong> <span class="font-bold text-lg">${emp.vacationDays}</span></div>
             </div>`;
         } else if (tabName === 'documents'){
-            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Documentos del Empleado</h3><button onclick="window.openFormModal('document', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Añadir</button></div>`;
+            content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Documentos del Empleado</h3><button onclick="window.openFormModal('document', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Generar Hoja de Vida</button></div>`;
             if (emp.documents && emp.documents.length > 0) {
                  content += `<ul class="space-y-3 mt-4">${emp.documents.map(doc => `
                     <li class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg flex justify-between items-center">
                         <div>
                             <p class="font-semibold">${doc.name}</p>
-                            <p class="text-sm text-gray-500">${doc.type} - Cargado: ${new Date(doc.uploadDate).toLocaleDateString()}</p>
+                            <p class="text-sm text-gray-500">${doc.type} - Generado: ${new Date(doc.uploadDate).toLocaleDateString()}</p>
                         </div>
                         <div class="flex items-center gap-2">
-                             <a href="${doc.fileData}" download="${doc.fileName}" class="text-blue-600 hover:text-blue-800" title="Descargar"><i data-feather="download"></i></a>
-                             <button onclick="window.deleteDocument(${emp.id}, ${doc.id})" class="text-red-500 hover:text-red-700" title="Eliminar"><i data-feather="trash-2"></i></button>
+                             <button onclick="window.deleteDocument(${emp.id}, ${doc.id})" class="text-red-500 hover:text-red-700" title="Eliminar Registro"><i data-feather="trash-2"></i></button>
                         </div>
                     </li>`).join('')}</ul>`;
             } else {
-                content += `<p class="text-gray-500 mt-4">No hay documentos cargados para este empleado.</p>`;
+                content += `<p class="text-gray-500 mt-4">No hay documentos generados para este empleado.</p>`;
             }
         } else if (tabName === 'leaves'){
             content = `<div class="flex justify-between items-center mb-3"><h3 class="text-xl font-semibold">Registro de Ausencias</h3><button onclick="window.openFormModal('leave', ${emp.id})" class="bg-blue-100 text-blue-600 text-sm font-semibold py-1 px-3 rounded-lg flex items-center hover:bg-blue-200"><i data-feather="plus" class="mr-1 h-4 w-4"></i>Registrar Ausencia</button></div>`;
@@ -351,11 +344,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document: (data = {}) => `
             <input type="hidden" name="employeeId" value="${data.id}">
             <div class="space-y-4">
-                <div><label class="block text-sm font-medium">Nombre del Documento</label><input type="text" name="name" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Ej: Contrato, Hoja de Vida" required></div>
-                <div><label class="block text-sm font-medium">Tipo</label><input type="text" name="type" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Ej: Laboral, Académico" required></div>
-                <div><label class="block text-sm font-medium">Archivo</label><input type="file" name="file" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-50 dark:file:bg-blue-900/50 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100" required></div>
+                <h4 class="text-lg font-semibold">Información de Contacto</h4>
+                <div><label class="block text-sm font-medium">Dirección de Residencia</label><input type="text" name="address" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div><label class="block text-sm font-medium">Teléfono de Contacto</label><input type="tel" name="phone" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
+                <div><label class="block text-sm font-medium">Correo Electrónico Personal</label><input type="email" name="email" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" required></div>
+
+                <h4 class="text-lg font-semibold border-t pt-4 mt-4">Perfil Profesional</h4>
+                <div><label class="block text-sm font-medium">Resumen Profesional</label><textarea name="profileSummary" rows="4" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Describa brevemente su perfil y objetivos profesionales..."></textarea></div>
+
+                <h4 class="text-lg font-semibold border-t pt-4 mt-4">Experiencia Laboral</h4>
+                <div><textarea name="workExperience" rows="6" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Liste su experiencia laboral previa, incluyendo cargo, empresa y fechas."></textarea></div>
+
+                <h4 class="text-lg font-semibold border-t pt-4 mt-4">Formación Académica</h4>
+                <div><textarea name="education" rows="4" class="mt-1 block w-full border rounded p-2 dark:bg-gray-700 dark:border-gray-600" placeholder="Liste sus títulos y estudios."></textarea></div>
             </div>
-            <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700"><button type="button" class="bg-gray-300 dark:bg-gray-600 py-2 px-4 rounded mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded">Subir Documento</button></div>`,
+            <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700"><button type="button" class="bg-gray-300 dark:bg-gray-600 py-2 px-4 rounded mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded">Generar y Descargar PDF</button></div>`,
         leave: (data = {}) => `
             <input type="hidden" name="employeeId" value="${data.id}">
             <div class="space-y-4">
@@ -381,8 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
         editingId = id;
         currentFormType = type;
         const data = id ? employeesData.find(e => e.id == id) : {};
-        const titles = { employee: 'Empleado', document: 'Nuevo Documento', leave: 'Registrar Ausencia' };
-        dom.formModal.title.textContent = `${id && type === 'employee' ? 'Editar' : 'Nuevo'} ${titles[type]}`;
+        const titles = { employee: 'Empleado', document: 'Generar Hoja de Vida', leave: 'Registrar Ausencia' };
+        dom.formModal.title.textContent = `${id && type === 'employee' ? 'Editar' : 'Generar'} ${titles[type]}`;
         dom.formModal.form.innerHTML = formTemplates[type](data);
         dom.formModal.form.querySelector('#cancel-btn').onclick = () => toggleModal(false);
         toggleModal(true);
@@ -397,14 +400,69 @@ document.addEventListener('DOMContentLoaded', () => {
         const employeeIndex = employeesData.findIndex(e => e.id === employeeId);
         
         if (currentFormType === 'document') {
-            const file = formData.get('file');
-            if (file && file.size > 0) {
-                const fileData = await fileToBase64(file);
-                const newDoc = { id: Date.now(), name: data.name, type: data.type, uploadDate: new Date().toISOString(), fileName: file.name, fileData };
-                if (employeeIndex > -1) {
-                    employeesData[employeeIndex].documents.push(newDoc);
-                    showToast('Documento añadido con éxito.');
+            const emp = employeesData[employeeIndex];
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // --- Estructura del PDF ---
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text(emp.name, 20, 20);
+
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'normal');
+            doc.text(`${data.address} | ${data.phone} | ${data.email}`, 20, 28);
+            doc.text(`C.C. ${emp.idNumber}`, 20, 34);
+
+            let yPosition = 45;
+
+            // Perfil Profesional
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("Perfil Profesional", 20, yPosition);
+            yPosition += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            let profileLines = doc.splitTextToSize(data.profileSummary, 170);
+            doc.text(profileLines, 20, yPosition);
+            yPosition += profileLines.length * 5 + 10;
+
+            // Experiencia Laboral
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("Experiencia Laboral", 20, yPosition);
+            yPosition += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            let experienceLines = doc.splitTextToSize(data.workExperience, 170);
+            doc.text(experienceLines, 20, yPosition);
+            yPosition += experienceLines.length * 5 + 10;
+
+            // Formación Académica
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("Formación Académica", 20, yPosition);
+            yPosition += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            let educationLines = doc.splitTextToSize(data.education, 170);
+            doc.text(educationLines, 20, yPosition);
+            
+            doc.save(`Hoja_de_Vida_${emp.name.replace(/ /g, '_')}.pdf`);
+
+            // Añadir un registro del documento generado (sin guardar el PDF en sí)
+            const newDocRecord = { 
+                id: Date.now(), 
+                name: `Hoja de Vida - ${emp.name}`, 
+                type: 'Hoja de Vida', 
+                uploadDate: new Date().toISOString()
+            };
+            if (employeeIndex > -1) {
+                if (!employeesData[employeeIndex].documents) {
+                    employeesData[employeeIndex].documents = [];
                 }
+                employeesData[employeeIndex].documents.push(newDocRecord);
+                showToast('Hoja de Vida en PDF generada con éxito.');
             }
         } else if (currentFormType === 'leave') {
             if (employeeIndex > -1) {
@@ -449,13 +507,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.deleteDocument = (employeeId, docId) => {
-         if (confirm('¿Estás seguro de eliminar este documento?')) {
+         if (confirm('¿Estás seguro de eliminar este registro de documento?')) {
             const empIndex = employeesData.findIndex(e => e.id === employeeId);
             if(empIndex > -1) {
                 employeesData[empIndex].documents = employeesData[empIndex].documents.filter(d => d.id !== docId);
                 saveAllEmployeeData();
                 renderTabContent('documents', employeesData[empIndex]);
-                showToast('Documento eliminado.');
+                showToast('Registro de documento eliminado.');
             }
          }
     };

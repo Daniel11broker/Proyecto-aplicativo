@@ -84,7 +84,7 @@
                     </div>
                 </section>
                 
-                <section class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                <section class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
                     <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
                         <h3 class="text-sm font-medium text-gray-500">Cuentas por Cobrar</h3>
                         <p id="kpi-accounts-receivable" class="text-2xl font-bold text-yellow-600 mt-1">$0</p>
@@ -96,6 +96,10 @@
                     <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
                         <h3 class="text-sm font-medium text-gray-500">Valor de Inventario</h3>
                         <p id="kpi-inventory-value" class="text-2xl font-bold text-indigo-600 mt-1">$0</p>
+                    </div>
+                    <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
+                        <h3 class="text-sm font-medium text-gray-500">Costo de Nómina</h3>
+                        <p id="kpi-payroll-cost" class="text-2xl font-bold text-orange-500 mt-1">$0</p>
                     </div>
                     <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
                         <h3 class="text-sm font-medium text-gray-500">Empleados Activos</h3>
@@ -111,6 +115,10 @@
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                         <h3 class="text-lg font-semibold mb-4">Composición Financiera</h3>
                         <div class="h-80"><canvas id="assets-liabilities-chart"></canvas></div>
+                    </div>
+                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow lg:col-span-2">
+                        <h3 class="text-lg font-semibold mb-4">Ingresos vs. Costo de Nómina</h3>
+                        <div class="h-80"><canvas id="revenue-payroll-chart"></canvas></div>
                     </div>
                 </section>
                 

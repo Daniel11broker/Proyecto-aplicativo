@@ -91,60 +91,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleModal = (modalEl, show) => modalEl.classList.toggle('hidden', !show);
     const getEmployeeName = (id) => (nominaData.employees.find(e => e.id == id) || {name: 'N/A'}).name;
 
-    // --- 4. LÓGICA DE CÁLCULO DE NÓMINA (VERSIÓN MEJORADA) ---
+    // --- 4. LÓGICA DE CÁLCULO DE NÓMINA (ACTUALIZADA) ---
     const calculatePayrollForEmployee = (employee, period) => {
         const S = nominaData.settings;
-        const baseSalary = employee.baseSalary;
+        let baseSalary = employee.baseSalary;
         
-        // --- INICIO DE MEJORAS: LÓGICA DE FRECUENCIA DE PAGO ---
-        const paymentFrequency = employee.paymentFrequency || 'mensual'; // Default a mensual si no está definido
-        let daysInPeriod = 30; // Días estándar para cálculos base
-        if (paymentFrequency === 'quincenal') {
-            daysInPeriod = 15;
-        } else if (paymentFrequency === 'semanal') {
-            daysInPeriod = 7;
-        }
-
-        // El salario del periodo se calcula proporcionalmente al salario mensual base.
-        const periodSalary = (baseSalary / 30) * daysInPeriod;
-        // --- FIN DE MEJORAS ---
-
-        // Lógica de ausencias (modificada para ser proporcional al periodo)
         const employeeLeaves = employee.leaves || [];
         const unpaidLeavesInPeriod = employeeLeaves.filter(l => !l.isPaid && l.startDate.substring(0, 7) === period);
         let unpaidDays = unpaidLeavesInPeriod.reduce((sum, l) => sum + l.days, 0);
+        let salaryDeductionForUnpaidLeave = 0;
         
-        // La deducción se calcula sobre el valor del día del salario mensual.
-        const salaryDeductionForUnpaidLeave = (baseSalary / 30) * unpaidDays;
-        
-        // Salario devengado en el periodo, ajustado por ausencias.
-        let earnedSalary = periodSalary - salaryDeductionForUnpaidLeave;
-        
+        if (unpaidDays > 0) {
+            salaryDeductionForUnpaidLeave = (baseSalary / 30) * unpaidDays;
+            baseSalary -= salaryDeductionForUnpaidLeave;
+        }
+
         const employeeNovelties = nominaData.novelties.filter(n => n.employeeId == employee.id && n.period === period);
         const noveltyEarnings = employeeNovelties.filter(n => n.type === 'devengado').reduce((sum, n) => sum + n.value, 0);
         const noveltyDeductions = employeeNovelties.filter(n => n.type === 'deduccion').reduce((sum, n) => sum + n.value, 0);
         
-        // El IBC se calcula sobre el salario devengado del periodo + novedades que sumen.
-        const ibc = earnedSalary + employeeNovelties.filter(n => n.type === 'devengado' && n.addsToIBC).reduce((sum, n) => sum + n.value, 0);
-        
-        const receivesTransportAid = baseSalary <= (S.salarioMinimo * S.topeAuxTransporte);
-        // El auxilio de transporte también se ajusta a los días del periodo trabajados.
-        const transportAid = receivesTransportAid ? (S.auxTransporte / 30) * (daysInPeriod - unpaidDays) : 0;
-        
-        const totalEarnings = earnedSalary + transportAid + noveltyEarnings;
+        const ibc = baseSalary + employeeNovelties.filter(n => n.type === 'devengado' && n.addsToIBC).reduce((sum, n) => sum + n.value, 0);
+        const receivesTransportAid = baseSalary <= (S.salarioMinimo * S.topeAuxTransporte) && unpaidDays < 30;
+        const transportAid = receivesTransportAid ? (S.auxTransporte / 30) * (30 - unpaidDays) : 0;
+        const totalEarnings = baseSalary + transportAid + noveltyEarnings;
         
         const healthDeduction = ibc * (S.saludEmpleado / 100);
         const pensionDeduction = ibc * (S.pensionEmpleado / 100);
         
-        const smmlvCount = (baseSalary / S.salarioMinimo); // Se calcula sobre el salario mensual para la tasa
+        const smmlvCount = ibc / S.salarioMinimo;
         let fspRate = 0;
-        if (smmlvCount >= 4) fspRate = 0.01; // Simplificado
+        if (smmlvCount >= 4) fspRate = 0.01;
         const fspDeduction = ibc * fspRate;
         
         const totalDeductions = healthDeduction + pensionDeduction + fspDeduction + noveltyDeductions;
         const netPay = totalEarnings - totalDeductions;
 
-        // Costos del empleador (calculados sobre el IBC del periodo)
         const healthEmployer = ibc * (S.saludEmpleador / 100);
         const pensionEmployer = ibc * (S.pensionEmpleador / 100);
         const arlEmployer = ibc * (S.arl / 100);
@@ -153,19 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const icbfEmployer = isExemptParafiscales ? 0 : ibc * (S.icbf / 100);
         const senaEmployer = isExemptParafiscales ? 0 : ibc * (S.sena / 100);
         const totalEmployerContributions = healthEmployer + pensionEmployer + arlEmployer + cajaEmployer + icbfEmployer + senaEmployer;
-        
-        // Las provisiones se calculan sobre el total devengado sin aux de transporte del periodo
         const provisionsBase = totalEarnings - transportAid;
         const cesantias = provisionsBase * 0.0833;
         const interesesCesantias = cesantias * 0.12;
         const prima = provisionsBase * 0.0833;
-        const vacaciones = (earnedSalary - salaryDeductionForUnpaidLeave) * 0.0417; // Sobre el salario básico devengado
+        const vacaciones = baseSalary * 0.0417;
         const totalProvisions = cesantias + interesesCesantias + prima + vacaciones;
-        
         const totalCompanyCost = totalEarnings + totalEmployerContributions + totalProvisions;
         
         return {
-            employeeId: employee.id, employeeName: employee.name, baseSalary: earnedSalary, // Reportar salario del periodo
+            employeeId: employee.id, employeeName: employee.name, baseSalary: employee.baseSalary,
             transportAid, totalEarnings, healthDeduction, pensionDeduction, fspDeduction,
             totalDeductions, netPay, novelties: employeeNovelties,
             unpaidLeave: { days: unpaidDays, deduction: salaryDeductionForUnpaidLeave },
@@ -175,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    // --- 5. LÓGICA DE RENDERIZADO Y UI ---
+    // --- El resto del archivo (renderizado, etc.) no necesita cambios ---
+    // ...
     const render = () => {
         const activeTab = dom.tabsContainer.querySelector('.tab-btn.active');
         if (activeTab) {
@@ -220,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
     };
     window.renderPayrollRunSection = () => {
-        const today = new Date();
+         const today = new Date();
         const currentPeriod = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
         document.getElementById('payroll-run-section').innerHTML = `
             <div id="view-only-banner" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
@@ -412,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div>
                         <h4 class="font-bold text-lg mb-2 text-green-600">Devengados</h4>
                         <table class="w-full border-collapse text-sm">
-                            <tr><td style="${tdStyle}">Salario Periodo</td><td style="${tdRight}">${formatCurrency(record.baseSalary)}</td></tr>
+                            <tr><td style="${tdStyle}">Salario Base</td><td style="${tdRight}">${formatCurrency(record.baseSalary)}</td></tr>
                             <tr><td style="${tdStyle}">Auxilio de Transporte</td><td style="${tdRight}">${formatCurrency(record.transportAid)}</td></tr>
                             ${record.novelties.filter(n=>n.type==='devengado').map(n=>`<tr><td style="${tdStyle}">${n.concept}</td><td style="${tdRight}">${formatCurrency(n.value)}</td></tr>`).join('')}
                             <tr class="font-bold bg-gray-100 dark:bg-gray-700"><td style="${tdStyle}">TOTAL DEVENGADO</td><td style="${tdRight}">${formatCurrency(record.totalEarnings)}</td></tr>
@@ -464,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3 class="text-lg font-bold">COSTO TOTAL EMPRESA: ${formatCurrency(record.totalCompanyCost)}</h3>
                     </div>
                 </div>
-                </div>`;
+            </div>`;
         toggleModal(dom.payslipModal.el, true);
     };
 
@@ -487,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    const openFormModal = (moduleKey, data = {}, onSaveCallback = null) => {
+     const openFormModal = (moduleKey, data = {}, onSaveCallback = null) => {
         editingId = data.id || null;
         const titles = { employees: 'Empleado', novelties: 'Novedad' };
         dom.formModal.title.textContent = `${editingId ? 'Editar' : 'Agregar'} ${titles[moduleKey]}`;
@@ -497,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleModal(dom.formModal.el, true);
     };
 
-    // --- 6. MANEJADORES DE EVENTOS Y ACCIONES ---
     const handleAdd = (module) => openFormModal(module);
     const handleEdit = (module, id) => {
         const item = nominaData[module].find(i => i.id === parseInt(id));
@@ -676,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.setFontSize(12); doc.text(`Empleado: ${employee.name}`, 14, 40); doc.text(`Cédula: ${employee.idNumber}`, 14, 46);
 
         const earningsBody = [
-            ['Salario del Periodo', formatCurrency(record.baseSalary)], ['Auxilio de Transporte', formatCurrency(record.transportAid)],
+            ['Salario Base', formatCurrency(record.baseSalary)], ['Auxilio de Transporte', formatCurrency(record.transportAid)],
             ...record.novelties.filter(n => n.type === 'devengado').map(n => [n.concept, formatCurrency(n.value)])];
         doc.autoTable({ startY: 55, head: [['Devengados', 'Valor']], body: earningsBody, foot: [['TOTAL DEVENGADO', formatCurrency(record.totalEarnings)]], theme: 'grid', headStyles: { fillColor: [22, 160, 133] }, footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' } });
         
@@ -688,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
         doc.setFontSize(14); doc.setFont(undefined, 'bold');
         doc.text(`NETO A PAGAR: ${formatCurrency(record.netPay)}`, 105, doc.lastAutoTable.finalY + 10, { align: 'center' });
 
-        // --- INICIO DE MEJORA: TABLA DE COSTOS DEL EMPLEADOR EN PDF ---
         const employerCostsBody = [
             [`Salud Empleador (${S.saludEmpleador}%)`, formatCurrency(record.employerContributions.health)],
             [`Pensión Empleador (${S.pensionEmpleador}%)`, formatCurrency(record.employerContributions.pension)],
@@ -709,7 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
             headStyles: { fillColor: [44, 62, 80] },
             footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' }
         });
-        // --- FIN DE MEJORA ---
 
         doc.save(`Comprobante-${employee.name.replace(/ /g, '_')}-${period}.pdf`);
     };
