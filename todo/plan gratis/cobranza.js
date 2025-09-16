@@ -52,9 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clientIdSelect: document.getElementById('clientId'),
         newClientContainer: document.getElementById('new-client-container'),
         newClientNameInput: document.getElementById('newClientName'),
-        attachmentsList: document.getElementById('attachments-list'),
-        fileUploadBtn: document.getElementById('file-upload-btn'),
-        fileUploadInput: document.getElementById('file-upload'),
     };
     const paymentModal = {
         el: document.getElementById('payment-modal'), form: document.getElementById('payment-form'),
@@ -81,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     let debtors = []; let clients = []; let editingDebtorId = null; let currentFilter = { status: 'Todos', month: 'Todos' };
     let history = []; let historyIndex = -1; let currentPage = 1; let sortColumn = 'dueDate'; let sortDirection = 'asc';
-    let debtChartInstance = null; let statusChartInstance = null; let tempAttachments = [];
+    let debtChartInstance = null; let statusChartInstance = null;
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
     const showToast = (message, type = 'success') => {
         const toastContainer = document.getElementById('toast-container'); const toastId = 'toast-' + Date.now();
@@ -176,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showNotification = (title, message) => { confirmModal.title.textContent = title; confirmModal.message.textContent = message; confirmModal.buttons.innerHTML = '<button id="confirm-ok-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Entendido</button>'; toggleModal(confirmModal.el, true); document.getElementById('confirm-ok-btn').onclick = () => toggleModal(confirmModal.el, false); };
     const showConfirmation = (title, message, callback) => { confirmModal.title.textContent = title; confirmModal.message.textContent = message; confirmModal.buttons.innerHTML = `<button id="confirm-cancel-btn" class="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg">Cancelar</button><button id="confirm-action-btn" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg">Confirmar</button>`; toggleModal(confirmModal.el, true); document.getElementById('confirm-cancel-btn').onclick = () => toggleModal(confirmModal.el, false); document.getElementById('confirm-action-btn').onclick = () => { callback(); toggleModal(confirmModal.el, false); }; };
     const populateForm = (data) => {
-        debtorModal.form.reset(); populateClientSelect(data.clientId); tempAttachments = data.attachments ? [...data.attachments] : []; renderAttachments();
+        debtorModal.form.reset(); populateClientSelect(data.clientId);
         Object.keys(data).forEach(key => { const input = debtorModal.form.elements[key]; if (input && !['retefuenteRate', 'reteicaRate'].includes(key)) { if (input.type === 'checkbox') input.checked = data[key]; else input.value = data[key]; } });
         debtorModal.retefuenteRateInput.value = data.retefuenteRate ? (data.retefuenteRate * 100) : (RETEFUENTE_RATE * 100);
         debtorModal.reteicaRateInput.value = data.reteicaRate ? (data.reteicaRate * 100) : (RETEICA_RATE * 100);
@@ -191,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const openAddDebtorModal = () => { editingDebtorId = null; debtorModal.title.textContent = 'Agregar Deudor'; populateForm({}); toggleModal(debtorModal.el, true); };
     window.handleEdit = (id) => { const debtor = debtors.find(d => d.id === id); if (debtor) { editingDebtorId = id; debtorModal.title.textContent = 'Editar Deudor'; populateForm(debtor); toggleModal(debtorModal.el, true); } };
-    window.handleDuplicate = (id) => { const debtor = debtors.find(d => d.id === id); if (debtor) { editingDebtorId = null; const duplicatedData = { ...debtor, id: null, invoiceNumber: '', dueDate: '', payments: [], attachments: [] }; debtorModal.title.textContent = 'Duplicar Registro'; populateForm(duplicatedData); toggleModal(debtorModal.el, true); } };
+    window.handleDuplicate = (id) => { const debtor = debtors.find(d => d.id === id); if (debtor) { editingDebtorId = null; const duplicatedData = { ...debtor, id: null, invoiceNumber: '', dueDate: '', payments: [] }; debtorModal.title.textContent = 'Duplicar Registro'; populateForm(duplicatedData); toggleModal(debtorModal.el, true); } };
     window.openPaymentModal = (id) => {
         const debtor = debtors.find(d => d.id === id); if (!debtor) return;
         const clientName = (clients.find(c => c.id === debtor.clientId) || {}).name || 'N/A';
@@ -233,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ['subtotal', 'totalWithIVA', 'retencionFuente', 'retencionICA'].forEach(k => data[k] = parseFloat(data[k]) || 0);
         data.retefuenteRate = parseFloat(data.retefuenteRate) / 100 || 0; data.reteicaRate = parseFloat(data.reteicaRate) / 100 || 0;
         data.aplicaRetefuente = debtorModal.aplicaRetefuenteCheckbox.checked; data.aplicaReteICA = debtorModal.aplicaReteICACheckbox.checked;
-        data.id = editingDebtorId || Date.now() + Math.random(); data.clientId = parseFloat(currentClientId); data.attachments = tempAttachments;
+        data.id = editingDebtorId || Date.now() + Math.random(); data.clientId = parseFloat(currentClientId);
         if (debtors.some(d => d.id !== data.id && d.clientId === data.clientId && d.invoiceNumber === data.invoiceNumber)) return showNotification('Error', 'Ya existe un registro para este cliente con el mismo número de documento.');
         const debtorToUpdate = editingDebtorId ? debtors.find(d => d.id === editingDebtorId) : null;
         const totalPaid = debtorToUpdate ? (debtorToUpdate.payments || []).reduce((sum, p) => sum + p.amount, 0) : 0;
@@ -269,31 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRetefuenteChecked) { const rate = parseFloat(debtorModal.retefuenteRateInput.value) / 100 || 0; debtorModal.retencionFuenteInput.value = (subtotal * rate).toFixed(2); } else { debtorModal.retencionFuenteInput.value = 0; }
         const isReteICAChecked = debtorModal.aplicaReteICACheckbox.checked; debtorModal.reteicaContainer.classList.toggle('hidden', !isReteICAChecked);
         if (isReteICAChecked) { const rate = parseFloat(debtorModal.reteicaRateInput.value) / 100 || 0; debtorModal.retencionICAInput.value = (subtotal * rate).toFixed(2); } else { debtorModal.retencionICAInput.value = 0; }
-    };
-    const renderAttachments = () => {
-        debtorModal.attachmentsList.innerHTML = '';
-        if (tempAttachments.length === 0) { debtorModal.attachmentsList.innerHTML = '<p class="text-xs text-gray-500 dark:text-gray-400">No hay archivos adjuntos.</p>'; return; }
-        tempAttachments.forEach((file, index) => {
-            const li = document.createElement('li'); li.className = 'flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-2 rounded-md';
-            li.innerHTML = `<span class="text-sm truncate">${file.name}</span><div><button type="button" onclick="window.viewAttachment(${index})" class="text-blue-500 hover:text-blue-700 p-1" title="Ver archivo"><i data-feather="eye" class="h-4 w-4"></i></button><button type="button" onclick="window.deleteAttachment(${index})" class="text-red-500 hover:text-red-700 p-1" title="Eliminar archivo"><i data-feather="trash-2" class="h-4 w-4"></i></button></div>`;
-            debtorModal.attachmentsList.appendChild(li);
-        });
-        feather.replace();
-    };
-    window.viewAttachment = (index) => {
-        const file = tempAttachments[index];
-        if (file) { const newWindow = window.open(); if (file.type.startsWith('image/')) { newWindow.document.write(`<img src="${file.data}" style="width:100%;">`); } else if (file.type === 'application/pdf') { newWindow.document.write(`<iframe src="${file.data}" width="100%" height="100%"></iframe>`); } else { newWindow.location.href = file.data; } }
-    };
-    window.deleteAttachment = (index) => { tempAttachments.splice(index, 1); renderAttachments(); };
-    const handleFileUpload = (event) => {
-        const files = event.target.files; if (!files) return;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => { tempAttachments.push({ id: Date.now() + Math.random(), name: file.name, type: file.type, data: e.target.result }); renderAttachments(); };
-            reader.onerror = () => showNotification('Error', `No se pudo leer el archivo ${file.name}.`);
-            reader.readAsDataURL(file);
-        });
-        debtorModal.fileUploadInput.value = '';
     };
     const createDownloadLink = (blob, fileName) => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); };
     const handleDownloadJson = () => { if(debtors.length === 0) return showNotification('Información', 'No hay datos para exportar.'); createDownloadLink(new Blob([JSON.stringify({debtors, clients}, null, 2)], { type: 'application/json' }), `backup_cobranza_${new Date().toISOString().slice(0, 10)}.json`); };
@@ -362,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
     debtorModal.aplicaReteICACheckbox.onchange = updateRetencionesUI; debtorModal.reteicaRateInput.addEventListener('input', updateRetencionesUI);
     debtorModal.documentTypeSelect.onchange = (e) => { debtorModal.invoiceNumberLabel.textContent = e.target.value === 'Cuenta de Cobro' ? 'Número Cuenta' : 'Número Factura'; };
     debtorModal.clientIdSelect.addEventListener('change', (e) => { const isNew = e.target.value === 'new'; debtorModal.newClientContainer.classList.toggle('hidden', !isNew); debtorModal.newClientNameInput.required = isNew; });
-    debtorModal.fileUploadBtn.onclick = () => debtorModal.fileUploadInput.click(); debtorModal.fileUploadInput.onchange = handleFileUpload;
     downloadButtons.json.onclick = handleDownloadJson; downloadButtons.csv.onclick = handleDownloadCsv; downloadButtons.pdf.onclick = handleDownloadPdf;
     downloadButtons.template.addEventListener('click', () => { const headers = "EMPRESA,FV,CC,FECHA DE FACTURA,TOTAL,ESTADO,OBSERVACIONES"; const example1 = `"Cliente de Ejemplo S.A.S.",FV-101,,25/08/2025,"$ 1.500.000",Pendiente,"Servicio de consultoría mes de Agosto"`; const example2 = `"Otro Cliente Ltda.",,CC-005,20/08/2025,"$ 850.000",Pagado,"Venta de producto X"`; const csvContent = [headers, example1, example2].join('\r\n'); createDownloadLink(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), 'plantilla_importacion.csv'); });
     importBtn.onclick = () => importFileInput.click(); importFileInput.onchange = handleFileSelect;
