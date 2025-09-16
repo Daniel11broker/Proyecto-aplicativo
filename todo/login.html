@@ -1,63 +1,23 @@
 <!DOCTYPE html>
 <html lang="es" class="light">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ingreso - Suite Empresarial</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(37,99,235)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='2' ry='2'></rect><path d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'></path></svg>" type="image/svg+xml">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/feather-icons"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="login.css">
+    
     <script>
+        // Configuración para que Tailwind reconozca el modo oscuro desde JS
         tailwind.config = { darkMode: 'class' }
     </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { display: flex; align-items: center; justify-content: center; flex-direction: column; min-height: 100vh; transition: background-color 0.3s ease; background-color: #f3f4f6; }
-        .dark body { background-color: #111827; }
-
-        /* Contenedor más grande para acomodar el texto */
-        .container { display: flex; background-color: #fff; border-radius: 30px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); position: relative; overflow: hidden; width: 768px; max-width: 90%; min-height: 480px; }
-        .dark .container { background-color: #1f2937; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
-        
-        /* Fuentes más grandes */
-        .container p { font-size: 15px; line-height: 22px; letter-spacing: 0.3px; margin: 20px 0; }
-        .container span { font-size: 14px; margin-bottom: 10px; }
-        .container a { font-size: 14px; text-decoration: none; margin: 15px 0 10px; }
-        .container button, .container .button-link { background-color: #2563eb; color: #fff; font-size: 13px; padding: 12px 45px; border: 1px solid transparent; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 10px; cursor: pointer; transition: background-color 0.3s; display: inline-block; text-align: center; }
-        .container button:hover, .container .button-link:hover { background-color: #1d4ed8; }
-        .container .button-link.hidden-btn { background-color: transparent; border: 2px solid #fff; }
-        .container form { background-color: #fff; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 0 40px; height: 100%; }
-        .dark .container form { background-color: #1f2937; }
-        .container input { background-color: #f3f4f6; border: 1px solid #d1d5db; margin: 8px 0; padding: 12px 15px; font-size: 14px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.3s; }
-        .container input:focus { border-color: #2563eb; }
-        .dark .container input { background-color: #374151; border-color: #4b5563; color: #e5e7eb; }
-        
-        .form-container { width: 50%; }
-        .toggle-container { width: 50%; background: linear-gradient(to right, #3b82f6, #1d4ed8); color: #fff; }
-        .toggle-panel { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 0 35px; text-align: center; }
-        .error-message { color: #ef4444; font-size: 13px; margin-top: 8px; height: 18px; }
-        
-        #theme-toggle .feather-sun { color: #4b5563; }
-        .dark #theme-toggle .feather-moon { color: #60a5fa; }
-        .mobile-toggle { display: none; }
-
-        @media (max-width: 767px) {
-            body { padding: 0; align-items: center; }
-            .fixed.top-4.left-4 { width: 100%; justify-content: space-between; padding: 0 1rem; }
-            .container { width: 100%; max-width: 100%; height: 100vh; min-height: 100vh; border-radius: 0; box-shadow: none; flex-direction: column; }
-            .toggle-container { display: none; }
-            .form-container { width: 100%; height: 100%; justify-content: center; }
-            .mobile-toggle { display: block; margin-top: 20px; font-size: 14px; }
-            .mobile-toggle a { color: #2563eb; font-weight: 600; cursor: pointer; }
-        }
-    </style>
 </head>
-
-<body class="bg-gray-100 dark:bg-gray-900">
+<body>
 
     <div class="fixed top-4 left-4 z-20 flex items-center gap-4">
         <a href="index.html" class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg shadow hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center">
@@ -70,100 +30,30 @@
     </div>
 
     <div class="container" id="container">
-        <div class="form-container sign-in">
-            <form id="login-form">
+        <div class="form-container">
+            <form id="login-form" class="w-full px-10">
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Iniciar Sesión</h1>
-                <span class="text-gray-600 dark:text-gray-400">Usa tu email y contraseña</span>
+                <span class="text-gray-600 dark:text-gray-400 my-3">Usa tu email y contraseña</span>
                 <input type="email" id="login-email" placeholder="Email" required>
                 <input type="password" id="login-password" placeholder="Contraseña" required>
-                <a href="#" class="text-sm text-gray-500 hover:text-blue-600">¿Olvidaste tu contraseña?</a>
+                <a href="#" class="text-sm text-gray-500 hover:text-blue-600 my-3">¿Olvidaste tu contraseña?</a>
                 <button type="submit">Iniciar Sesión</button>
                 <p id="login-error" class="error-message"></p>
-                <p class="mobile-toggle text-gray-600 dark:text-gray-400">¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
+                 <p class="mobile-toggle text-gray-600 dark:text-gray-400">¿No tienes cuenta? <a href="registro.html">Regístrate</a></p>
             </form>
         </div>
 
         <div class="toggle-container">
             <div class="toggle-panel">
                 <i data-feather="briefcase" class="h-16 w-16 mb-4"></i>
-                <h1 class="text-3xl font-bold">¿Aún no tienes una cuenta?</h1>
-                <p>Únete a esta solución empresarial y lleva tu gestión al siguiente nivel.</p>
-                <a href="registro.html" class="button-link hidden-btn">Crear Cuenta</a>
+                <h1 class="text-3xl font-bold">Bienvenido de Nuevo</h1>
+                <p class="my-4">Ingresa tus datos para acceder a tu panel de control y seguir gestionando tu empresa.</p>
             </div>
         </div>
     </div>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    <script src="login.js"></script>
 
-        // IMPORTANTE: Reemplaza esto con tu configuración real de Firebase
-        const firebaseConfig = {
-          apiKey: "TU_API_KEY",
-          authDomain: "TU_AUTH_DOMAIN",
-          projectId: "TU_PROJECT_ID",
-          storageBucket: "TU_STORAGE_BUCKET",
-          messagingSenderId: "TU_MESSAGING_SENDER_ID",
-          appId: "TU_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        document.addEventListener('DOMContentLoaded', () => {
-            feather.replace();
-
-            const themeToggle = document.getElementById('theme-toggle');
-
-            const applyTheme = (theme) => {
-                document.documentElement.classList.toggle('dark', theme === 'dark');
-                feather.replace();
-            };
-
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            applyTheme(savedTheme);
-
-            themeToggle.addEventListener('click', () => {
-                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-                localStorage.setItem('theme', newTheme);
-                applyTheme(newTheme);
-            });
-
-            const loginForm = document.getElementById('login-form');
-            const loginError = document.getElementById('login-error');
-
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const password = document.getElementById('login-password').value;
-                loginError.textContent = '';
-
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(userCredential => {
-                        window.location.href = './resportes.html';
-                    })
-                    .catch(error => {
-                        loginError.textContent = getFirebaseErrorMessage(error.code);
-                    });
-            });
-
-            function getFirebaseErrorMessage(errorCode) {
-                switch (errorCode) {
-                    case 'auth/invalid-email':
-                        return 'El formato del correo no es válido.';
-                    case 'auth/user-not-found':
-                    case 'auth/wrong-password':
-                    case 'auth/invalid-credential':
-                        return 'Correo o contraseña incorrectos.';
-                    default:
-                        return 'Ocurrió un error. Inténtalo de nuevo.';
-                }
-            }
-        });
-    </script>
 </body>
 </html>
 
