@@ -29,7 +29,7 @@
         </div>
         <div class="flex-grow overflow-y-auto overflow-x-hidden">
             <div class="flex flex-col py-4 space-y-1">
-                 <a href="./inicio.html" class="flex items-center h-12 px-6 text-blue-600 bg-blue-50 dark:bg-gray-700 dark:text-blue-300 font-semibold" title="Inicio">
+                 <a href="./inicio.html" class="flex items-center h-12 px-6 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" title="Inicio">
                     <i data-feather="home" class="h-6 w-6 flex-shrink-0"></i>
                     <span class="sidebar-text">Inicio</span>
                 </a>
@@ -97,7 +97,7 @@
                         <h3 class="text-sm font-medium text-gray-500">Valor de Inventario</h3>
                         <p id="kpi-inventory-value" class="text-2xl font-bold text-indigo-600 mt-1">$0</p>
                     </div>
-                    <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
+                     <div class="kpi-card bg-white dark:bg-gray-800 p-5 rounded-lg shadow text-center">
                         <h3 class="text-sm font-medium text-gray-500">Costo de Nómina</h3>
                         <p id="kpi-payroll-cost" class="text-2xl font-bold text-orange-500 mt-1">$0</p>
                     </div>
@@ -106,6 +106,8 @@
                         <p id="kpi-employee-count" class="text-2xl font-bold text-gray-700 dark:text-gray-300 mt-1">0</p>
                     </div>
                 </section>
+                
+                <section id="financial-health-summary" class="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow"></section>
 
                 <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -123,8 +125,9 @@
                 </section>
                 
                 <section class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold mb-4">Top 5 Clientes por Facturación (Período)</h3>
-                    <div class="h-80"><canvas id="top-clients-chart"></canvas></div>
+                    <h3 class="text-lg font-semibold mb-4">Análisis de Cartera por Cliente (Top 10)</h3>
+                    <div id="top-clients-table-container" class="overflow-x-auto">
+                        </div>
                 </section>
 
             </main>

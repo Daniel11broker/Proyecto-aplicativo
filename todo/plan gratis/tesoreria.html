@@ -29,7 +29,7 @@
         </div>
         <div class="flex-grow overflow-y-auto overflow-x-hidden">
             <div class="flex flex-col py-4 space-y-1">
-                 <a href="./inicio.html" class="flex items-center h-12 px-6 text-blue-600 bg-blue-50 dark:bg-gray-700 dark:text-blue-300 font-semibold" title="Inicio">
+                 <a href="./inicio.html" class="flex items-center h-12 px-6 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" title="Inicio">
                     <i data-feather="home" class="h-6 w-6 flex-shrink-0"></i>
                     <span class="sidebar-text">Inicio</span>
                 </a>
@@ -87,6 +87,19 @@
         </div>
     </div>
     
+    <div id="reconciliation-modal" class="modal fixed inset-0 w-full h-full flex items-center justify-center z-50 hidden" style="background-color: rgba(0,0,0,0.6);">
+        <div class="bg-white dark:bg-gray-800 w-11/12 md:max-w-2xl mx-auto rounded-lg shadow-xl z-50">
+            <div class="py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
+                    <p id="reconciliation-modal-title" class="text-2xl font-bold">Conciliación de Cuenta</p>
+                    <button id="close-reconciliation-modal-btn" class="cursor-pointer z-50 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"><i data-feather="x"></i></button>
+                </div>
+                <div id="reconciliation-content" class="mt-4 max-h-[70vh] overflow-y-auto pr-2">
+                    </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
 
     <script src="tesoreria.js"></script>
