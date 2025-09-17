@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Superadministrador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://unpkg.com/dexie@3.2.3/dist/dexie.mjs" type="module"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./plan_de_pago/main.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white font-inter">
+
+    <div id="sidebar-container"></div>
+    <div id="header-container"></div>
+    
+    <div class="p-4 sm:ml-64 mt-16 sm:mt-0">
+        <div class="p-4 rounded-lg mt-14 sm:mt-4">
+            <header class="mb-8 text-center sm:text-left">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Panel de Superadministrador</h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">Gestiona los usuarios administradores del sistema.</p>
+            </header>
+
+            <div id="admin-form-container" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 dark:border-gray-700">Crear Nuevo Administrador</h2>
+                <form id="admin-form" class="space-y-4">
+                    <input type="hidden" id="admin-id">
+                    <div>
+                        <label for="username" class="label">Nombre de Usuario</label>
+                        <input type="text" id="username" class="input" required>
+                    </div>
+                    <div>
+                        <label for="password" class="label">Contraseña</label>
+                        <input type="password" id="password" class="input" required>
+                    </div>
+                    <div>
+                        <label for="role" class="label">Rol</label>
+                        <select id="role" class="input">
+                            <option value="admin">Administrador</option>
+                            <option value="superadmin">Superadministrador</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button type="button" id="cancel-edit-btn" class="btn-secondary hidden">Cancelar</button>
+                        <button type="submit" id="save-btn" class="btn-primary">Crear Administrador</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="admin-list-container" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <h2 class="text-xl font-semibold p-6 border-b dark:border-gray-700">Administradores Existentes</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr>
+                                <th class="th">Nombre de Usuario</th>
+                                <th class="th">Rol</th>
+                                <th class="th text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="db.js" type="module"></script>
+    <script src="superadmin.js" type="module"></script>
+    <script>
+        // Lógica para el tema y la seguridad de la página
+        const applyTheme = (theme) => document.documentElement.classList.toggle('dark', theme === 'dark');
+        applyTheme(localStorage.getItem('theme') || 'light');
+    </script>
+</body>
+</html>
