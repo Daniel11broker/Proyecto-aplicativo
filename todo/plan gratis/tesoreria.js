@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tabsContainer: document.getElementById('tabs-container'),
         mainContent: document.getElementById('main-content'),
         formModal: { el: document.getElementById('form-modal'), title: document.getElementById('modal-title'), form: document.getElementById('main-form'), closeBtn: document.getElementById('close-modal-btn') },
-        reconciliationModal: { el: document.getElementById('reconciliation-modal'), title: document.getElementById('reconciliation-modal-title'), content: document.getElementById('reconciliation-content'), closeBtn: document.getElementById('close-reconciliation-modal-btn') },
         themeToggle: document.getElementById('theme-toggle'),
     };
     let tesoreriaData = {};
@@ -51,13 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const futureLimit = new Date();
         futureLimit.setDate(today.getDate() + 30);
         let flows = [];
+
+        // Integración con Facturación y Cobranza: Lee las facturas pendientes como ingresos proyectados
         const debtorsData = JSON.parse(localStorage.getItem('debtors')) || [];
         debtorsData.filter(d => d.status !== 'Pagado' && new Date(d.dueDate) <= futureLimit && new Date(d.dueDate) >= today)
             .forEach(d => flows.push({ date: d.dueDate, amount: d.balance, type: 'inflow', description: `Cobro Factura ${d.invoiceNumber}` }));
+
+        // Integración con Compras: Lee las facturas de proveedores pendientes como egresos proyectados
         const comprasData = JSON.parse(localStorage.getItem('compras_data_v1')) || { bills: [] };
         comprasData.bills.filter(b => b.status !== 'Pagada' && new Date(b.dueDate) <= futureLimit && new Date(b.dueDate) >= today)
             .forEach(b => flows.push({ date: b.dueDate, amount: -b.balance, type: 'outflow', description: `Pago Factura Prov. ${b.invoiceNumber}` }));
         
+        // Lee los movimientos manuales, que incluyen las ventas del TPV
         tesoreriaData.manualTransactions.filter(t => new Date(t.date) <= futureLimit && new Date(t.date) >= today)
             .forEach(t => flows.push({ date: t.date, amount: t.type === 'inflow' ? parseFloat(t.amount) : -parseFloat(t.amount), type: t.type, description: t.description }));
         
@@ -66,6 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const recalculateAllBalances = () => {
+        // Asegurarse de que la cuenta 'Caja General' existe antes de calcular
+        let cashAccount = tesoreriaData.accounts.find(acc => acc.name === 'Caja General');
+        if (!cashAccount) {
+            const newAccountId = Date.now();
+            cashAccount = { id: newAccountId, name: 'Caja General', bank: 'N/A', type: 'Efectivo', initialBalance: 0, currentBalance: 0 };
+            tesoreriaData.accounts.push(cashAccount);
+        }
+
         tesoreriaData.accounts.forEach(acc => {
             let balance = acc.initialBalance || 0;
             tesoreriaData.manualTransactions.filter(t => t.accountId == acc.id)
@@ -83,15 +95,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const todayStr = new Date().toISOString().slice(0, 10);
         
         const debtorsData = JSON.parse(localStorage.getItem('debtors')) || [];
-        // ** INICIO DE LA CORRECCIÓN **
         debtorsData.forEach(d => {
             const totalPaid = (d.payments || []).reduce((sum, p) => sum + p.amount, 0);
             const totalRetenciones = (d.retencionFuente || 0) + (d.retencionICA || 0);
             d.balance = (d.totalWithIVA || 0) - totalPaid - totalRetenciones;
         });
         const overdueReceivables = debtorsData.filter(d => d.status !== 'Pagado' && d.dueDate < todayStr).reduce((sum, d) => sum + (d.balance || 0), 0);
-        // ** FIN DE LA CORRECCIÓN **
-
         const comprasData = JSON.parse(localStorage.getItem('compras_data_v1')) || { bills: [] };
         const overduePayables = comprasData.bills.filter(b => b.status !== 'Pagada' && b.dueDate < todayStr).reduce((sum, b) => sum + b.balance, 0);
         document.getElementById('dashboard-section').innerHTML = `
@@ -151,17 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const section = document.getElementById(`${moduleKey}-section`);
         let tableRows = data.map(item => {
             if (moduleKey === 'accounts') {
-                return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-4 py-3">${item.name}</td>
-                            <td class="px-4 py-3">${item.bank}</td>
-                            <td class="px-4 py-3">${item.type}</td>
-                            <td class="px-4 py-3 font-medium text-right">${formatCurrency(item.currentBalance)}</td>
-                            <td class="px-4 py-3 text-right">
-                                <button class="reconcile-btn p-1 text-green-500 hover:text-green-700" data-id="${item.id}" title="Conciliar"><i data-feather="check-square" class="h-4 w-4"></i></button>
-                                <button class="edit-btn p-1 text-blue-500 hover:text-blue-700" data-id="${item.id}" title="Editar"><i data-feather="edit-2" class="h-4 w-4"></i></button>
-                                <button class="delete-btn p-1 text-red-500 hover:text-red-700" data-id="${item.id}" title="Eliminar"><i data-feather="trash-2" class="h-4 w-4"></i></button>
-                            </td>
-                        </tr>`;
+                return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="px-4 py-3">${item.name}</td><td class="px-4 py-3">${item.bank}</td><td class="px-4 py-3">${item.type}</td><td class="px-4 py-3 font-medium text-right">${formatCurrency(item.currentBalance)}</td><td class="px-4 py-3 text-right"><button class="edit-btn p-1 text-blue-500 hover:text-blue-700" data-id="${item.id}" title="Editar"><i data-feather="edit-2" class="h-4 w-4"></i></button><button class="delete-btn p-1 text-red-500 hover:text-red-700" data-id="${item.id}" title="Eliminar"><i data-feather="trash-2" class="h-4 w-4"></i></button></td></tr>`;
             } else { // transactions
                 const accountName = tesoreriaData.accounts.find(a => a.id == item.accountId)?.name || 'N/A';
                 const amountClass = item.type === 'inflow' ? 'text-green-600' : 'text-red-600';
@@ -176,42 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
     };
     
-    const openReconciliationModal = (accountId) => {
-        const account = tesoreriaData.accounts.find(acc => acc.id == accountId);
-        if (!account) return;
-
-        dom.reconciliationModal.title.textContent = `Conciliación de: ${account.name}`;
-        const transactions = tesoreriaData.manualTransactions
-            .filter(t => t.accountId == accountId)
-            .sort((a, b) => new Date(b.date) - new Date(a.date)) // Ordenar por fecha descendente
-            .slice(0, 15); // Limitar a las últimas 15 transacciones
-
-        let contentHTML = '<p class="text-sm text-gray-500 mb-4">Marque las transacciones que ha verificado contra su extracto bancario.</p>';
-        if (transactions.length === 0) {
-            contentHTML += '<p class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-md">No hay movimientos recientes para esta cuenta.</p>';
-        } else {
-            contentHTML += '<ul class="space-y-3">';
-            transactions.forEach(t => {
-                const amountClass = t.type === 'inflow' ? 'text-green-600' : 'text-red-600';
-                contentHTML += `
-                    <li class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 mr-4 focus:ring-blue-500">
-                            <div>
-                                <p class="font-medium">${t.description}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">${t.date}</p>
-                            </div>
-                        </div>
-                        <span class="font-semibold ${amountClass}">${formatCurrency(t.amount)}</span>
-                    </li>`;
-            });
-            contentHTML += '</ul>';
-        }
-        dom.reconciliationModal.content.innerHTML = contentHTML;
-        toggleModal(dom.reconciliationModal.el, true);
-        feather.replace();
-    };
-
     const renderAccountsSection = () => renderTableSection('accounts');
     const renderTransactionsSection = () => renderTableSection('transactions');
 
@@ -279,11 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const addBtn = e.target.closest('#add-btn');
         const editBtn = e.target.closest('.edit-btn');
         const deleteBtn = e.target.closest('.delete-btn');
-        const reconcileBtn = e.target.closest('.reconcile-btn');
         const exportBtn = e.target.closest('#export-csv-btn');
         if (addBtn) openFormModal(currentModule);
         if (editBtn) openFormModal(currentModule, editBtn.dataset.id);
-        if (reconcileBtn) openReconciliationModal(reconcileBtn.dataset.id);
         if (deleteBtn) {
             if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
                 const dataArray = currentModule === 'accounts' ? tesoreriaData.accounts : tesoreriaData.manualTransactions;
@@ -313,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     dom.formModal.el.addEventListener('click', (e) => { if (e.target.closest('.cancel-btn') || e.target.closest('#close-modal-btn') || e.target === dom.formModal.el) toggleModal(dom.formModal.el, false); });
-    dom.reconciliationModal.el.addEventListener('click', (e) => { if (e.target.closest('#close-reconciliation-modal-btn') || e.target === dom.reconciliationModal.el) toggleModal(dom.reconciliationModal.el, false); });
     
     dom.tabsContainer.addEventListener('click', (e) => {
         const tabBtn = e.target.closest('.tab-btn');

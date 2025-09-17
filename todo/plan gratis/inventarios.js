@@ -53,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             barcode: document.getElementById('barcode-modal'),
             abcAnalysis: document.getElementById('abc-analysis-modal'),
             profitability: document.getElementById('profitability-report-modal'),
+            imagePreview: document.getElementById('image-preview-modal'),
         },
     };
 
@@ -116,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('inventoryUpdateFromPO');
     };
     
-    // --- UTILIDADES ---
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
     
     const showToast = (message, type = 'success') => {
@@ -156,8 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.lowStockThreshold > 0 && p.quantity <= p.lowStockThreshold) return { key: 'low_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300">Stock Bajo</span>' };
         return { key: 'in_stock', html: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">En Stock</span>' };
     };
+    
+    const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 
-    // --- RENDERIZADO PRINCIPAL ---
     const renderAll = () => {
         renderDashboard();
         populateSupplierFilter();
@@ -165,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
         feather.replace();
     };
 
-    // --- RENDERIZADO DE COMPONENTES ---
     const renderDashboard = () => {
         let totalValue = 0, lowStockCount = 0, costOfGoodsSold = 0;
         const statusCounts = { in_stock: 0, low_stock: 0, reorder: 0, out_of_stock: 0 };
@@ -755,14 +760,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         dom.selectAllCheckbox.addEventListener('change', (e) => {
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            if (e.target.checked) {
-                checkboxes.forEach(cb => {
-                    state.selectedItems.add(parseInt(cb.dataset.id));
-                });
-            } else {
-                state.selectedItems.clear();
-            }
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                const id = parseInt(cb.dataset.id);
+                if (e.target.checked) {
+                    state.selectedItems.add(id);
+                } else {
+                    state.selectedItems.delete(id);
+                }
+            });
             renderTable();
         });
     };

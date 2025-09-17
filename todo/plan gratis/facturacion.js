@@ -126,14 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderDocumentTable = () => {
         const tableBody=document.getElementById('document-table-body');const noData=document.getElementById('no-data-message');if(!tableBody||!noData)return;const filtered=getFilteredData();noData.classList.toggle('hidden',filtered.length>0);noData.innerHTML=filtered.length===0?'<p class="text-gray-500">No se encontraron documentos.</p>':'';const {currentPage,itemsPerPage}=state.pagination;const paginatedItems=filtered.slice((currentPage-1)*itemsPerPage,currentPage*itemsPerPage);
-        tableBody.innerHTML=paginatedItems.map(doc=>`<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50"><td class="td">${doc.number}</td><td class="td">${doc.clientName}</td><td class="td">${formatDate(doc.issueDate)}</td><td class="td">${renderStatusBadge(doc.status)}</td><td class="td font-semibold">${formatCurrency(doc.total)}</td><td class="td text-right flex justify-end gap-1"><button onclick="window.duplicateDocument('${currentDocumentType}',${doc.id})" title="Duplicar" class="btn-action"><i data-feather="copy" class="icon-sm text-green-600"></i></button><button onclick="window.editDocument('${currentDocumentType}',${doc.id})" title="Editar" class="btn-action"><i data-feather="edit" class="icon-sm text-blue-600"></i></button><button onclick="window.deleteDocument('${currentDocumentType}',${doc.id})" title="Eliminar" class="btn-action"><i data-feather="trash-2" class="icon-sm text-red-600"></i></button></td></tr>`).join('').replace(/class="td"/g,'class="px-6 py-4 whitespace-nowrap"').replace(/class="btn-action"/g,'class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"').replace(/class="icon-sm"/g,'class="h-4 w-4"');
+        tableBody.innerHTML=paginatedItems.map(doc=>`<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50"><td class="px-6 py-4 font-medium">${doc.number}</td><td class="px-6 py-4">${doc.clientName}</td><td class="px-6 py-4">${formatDate(doc.issueDate)}</td><td class="px-6 py-4">${renderStatusBadge(doc.status)}</td><td class="px-6 py-4">${formatCurrency(doc.total)}</td><td class="px-6 py-4 text-right flex justify-end gap-1"><button onclick="window.duplicateDocument('${currentDocumentType}',${doc.id})" title="Duplicar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="copy" class="h-4 w-4 text-green-600"></i></button><button onclick="window.editDocument('${currentDocumentType}',${doc.id})" title="Editar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="edit" class="h-4 w-4 text-blue-600"></i></button><button onclick="window.deleteDocument('${currentDocumentType}',${doc.id})" title="Eliminar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="trash-2" class="h-4 w-4 text-red-600"></i></button></td></tr>`).join('');
         renderPaginationControls(Math.ceil(filtered.length/itemsPerPage),filtered.length);feather.replace();
     };
 
     const renderPaginationControls = (totalPages,totalItems)=>{const paginationControls=document.getElementById('pagination-controls');if(!paginationControls||totalPages<=1){if(paginationControls)paginationControls.innerHTML='';return;}const{currentPage}=state.pagination;let buttons=Array.from({length:totalPages},(_,i)=>i+1).map(i=>`<button class="pagination-btn ${i===currentPage?'active':''}" data-page="${i}">${i}</button>`).join('');paginationControls.innerHTML=`<div class="flex flex-col md:flex-row justify-between items-center"><p class="text-sm text-gray-500 mb-2 md:mb-0">Mostrando ${((currentPage-1)*10)+1}-${Math.min(currentPage*10,totalItems)} de ${totalItems}</p><div class="flex items-center space-x-1"><button class="pagination-btn" data-page="${currentPage-1}" ${currentPage===1?'disabled':''}>Anterior</button>${buttons}<button class="pagination-btn" data-page="${currentPage+1}" ${currentPage===totalPages?'disabled':''}>Siguiente</button></div></div>`.replace(/class="pagination-btn"/g,'class="px-3 py-1 rounded-md border dark:border-gray-600 text-sm font-medium transition"').replace(/class="pagination-btn active"/g,'class="px-3 py-1 rounded-md border dark:border-gray-600 text-sm font-medium transition bg-blue-600 text-white border-blue-600"');paginationControls.querySelectorAll('button').forEach(button=>button.addEventListener('click',e=>{state.pagination.currentPage=Number(e.currentTarget.dataset.page);renderDocumentTable();}));};
 
     const renderDocumentEditorView = (docId) => {
-        const doc = docId ? (documentosData[currentDocumentType] || []).find(d => d.id == docId) : (prefilledData || {});
+        let doc = docId ? (documentosData[currentDocumentType] || []).find(d => d.id == docId) : (prefilledData || {});
         if(prefilledData) prefilledData = null;
 
         const docInfo = { invoices: { title: "Factura de Venta" }, chargeAccounts: { title: "Cuenta de Cobro"}, creditNotes: { title: "Nota de Crédito" }, debitNotes: { title: "Nota de Débito" }}[currentDocumentType];
@@ -215,71 +215,109 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleSaveDocument = (e) => {
-        e.preventDefault();const formData=new FormData(e.target);const data=Object.fromEntries(formData.entries());const docArray=documentosData[currentDocumentType];
-        if(docArray.some(doc=>doc.id!=editingId&&doc.clientId==data.clientId&&doc.number.toLowerCase()===data.number.toLowerCase())){return showToast('El número de documento ya existe para este cliente.','error');}
-        const subtotal=parseFloat(data.subtotal)||0,iva=parseFloat(data.iva)||0,retefuente=parseFloat(data.retefuente)||0,ica=parseFloat(data.ica)||0;let newDoc={id:editingId||Date.now(),number:data.number,clientId:parseInt(data.clientId),clientName:clientsData.find(c=>c.id==data.clientId)?.name||'N/A',issueDate:data.issueDate,subtotal,iva,retefuente,ica,total:subtotal+iva-retefuente-ica,status:data.status,issuedBy:data.issuedBy,receivedBy:data.receivedBy,notes:data.notes};
-        if(editingId){docArray[docArray.findIndex(d=>d.id==editingId)]=newDoc;showToast('Documento actualizado.');}else{docArray.push(newDoc);showToast('Documento creado con éxito.');}
-        if(data.sendToCobranza==='on'&&newDoc.total>0){let debtors=JSON.parse(localStorage.getItem('debtors'))||[];debtors=debtors.filter(d=>d.documentoId!==newDoc.id);debtors.push({id:Date.now(),documentoId:newDoc.id,clientId:newDoc.clientId,documentType:currentDocumentType==='invoices'?'Factura de Venta':'Cuenta de Cobro',invoiceNumber:newDoc.number,totalWithIVA:newDoc.total,balance:newDoc.total,dueDate:newDoc.issueDate,status:'Pendiente',payments:[]});localStorage.setItem('debtors',JSON.stringify(debtors));showToast('Documento enviado a cobranza.','info');}
-        saveData();currentView='list';render();
-    };
-    
-    const showClientModal = () => {
-        const modal = document.createElement('div');
-        modal.id = 'client-modal';
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[100] p-4';
-        const inputClasses = "w-full bg-slate-50 border border-slate-300 rounded-md p-2 shadow-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 transition";
-        const labelClasses = "block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1";
-        const btnPrimary = "px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition";
-        const btnSecondary = "px-6 py-2 bg-slate-200 text-gray-800 font-semibold rounded-lg hover:bg-slate-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition";
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        const docArray = documentosData[currentDocumentType];
+
+        const isDuplicate = docArray.some(doc => 
+            doc.id != editingId &&
+            doc.clientId == data.clientId &&
+            doc.number.toLowerCase() === data.number.toLowerCase()
+        );
+        if (isDuplicate) { return showToast('El número de documento ya existe para este cliente.', 'error'); }
+
+        let newDoc = {
+            id: editingId || Date.now(),
+            number: data.number,
+            clientId: parseInt(data.clientId),
+            clientName: clientsData.find(c => c.id == data.clientId)?.name || 'N/A',
+            issueDate: data.issueDate,
+            total: parseFloat(data.total),
+            attachment: state.tempAttachment || (editingId ? docArray.find(d => d.id == editingId)?.attachment : null)
+        };
+
+        if (editingId) {
+            const index = docArray.findIndex(d => d.id == editingId);
+            docArray[index] = newDoc;
+            showToast('Documento actualizado.');
+        } else {
+            docArray.push(newDoc);
+            showToast('Documento creado con éxito.');
+        }
         
-        modal.innerHTML = `<div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-md"><h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Nuevo Cliente</h3>
-            <form id="new-client-form" class="space-y-4">
-                <div><label class="${labelClasses}">Nombre del Cliente</label><input type="text" id="new-client-name" class="${inputClasses}" required></div>
-                <div><label class="${labelClasses}">NIT / Cédula</label><input type="text" id="new-client-id-number" class="${inputClasses}"></div>
-                <div class="flex justify-end gap-3 pt-4">
-                    <button type="button" id="cancel-client" class="${btnSecondary}">Cancelar</button><button type="submit" class="${btnPrimary}">Guardar</button>
-                </div></form></div>`;
-        document.body.appendChild(modal);feather.replace();
-        document.getElementById('cancel-client').addEventListener('click',()=>modal.remove());
-        document.getElementById('new-client-form').addEventListener('submit',(e)=>{
-            e.preventDefault();
-            const newName = document.getElementById('new-client-name').value.trim();
-            const newIdNumber = document.getElementById('new-client-id-number').value.trim();
-            if(newName){
-                const newClient={id:Date.now(),name:newName,idNumber:newIdNumber};clientsData.push(newClient);saveClientsData();showToast('Cliente creado con éxito.');modal.remove();
-                const clientSelect = document.getElementById('client-select');
-                if(clientSelect){
-                    const option = document.createElement('option');
-                    option.value = newClient.id;
-                    option.textContent = newClient.name;
-                    option.selected = true;
-                    clientSelect.appendChild(option);
-                    clientSelect.dispatchEvent(new Event('change')); // Dispara el evento para actualizar el NIT/CC visible
-                }
-            }
-        });
+        if (data.sendToCobranza === 'on') {
+            let debtors = JSON.parse(localStorage.getItem('debtors')) || [];
+            debtors = debtors.filter(d => d.documentoId !== newDoc.id);
+            debtors.push({
+                id: Date.now(), documentoId: newDoc.id, clientId: newDoc.clientId,
+                documentType: currentDocumentType === 'invoices' ? 'Factura de Venta' : 'Cuenta de Cobro',
+                invoiceNumber: newDoc.number, totalWithIVA: newDoc.total, balance: newDoc.total,
+                dueDate: newDoc.issueDate, status: 'Pendiente', payments: []
+            });
+            localStorage.setItem('debtors', JSON.stringify(debtors));
+            showToast('Documento enviado a cobranza.', 'info');
+        }
+
+        saveData();
+        currentView = 'list';
+        render();
     };
 
-    window.duplicateDocument = (docType, id) => {
-        const docToCopy = documentosData[docType].find(d => d.id == id);
-        if(docToCopy){prefilledData={...docToCopy};delete prefilledData.id;prefilledData.isDuplicate=true;prefilledData.number=`${docToCopy.number}-COPIA`;prefilledData.issueDate=new Date().toISOString().slice(0,10);prefilledData.status='Borrador';editingId=null;currentView='editor';render();}
+    window.editDocument = (docType, id) => {
+        currentDocumentType = docType;
+        editingId = id;
+        currentView = 'editor';
+        render();
     };
-
-    window.editDocument = (docType, id) => {currentDocumentType=docType;editingId=id;currentView='editor';render();};
-    window.deleteDocument = (docType, id) => {if(confirm('¿Estás seguro?')){documentosData[docType]=documentosData[docType].filter(d=>d.id!=id);saveData();renderDocumentListView();showToast('Documento eliminado.');}};
     
+    window.deleteDocument = (docType, id) => {
+        if (confirm('¿Estás seguro de que quieres eliminar este documento?')) {
+            documentosData[docType] = documentosData[docType].filter(d => d.id != id);
+            saveData();
+            render();
+            showToast('Documento eliminado.');
+        }
+    };
+    
+    // --- Inicialización ---
     const init = () => {
         const applyTheme=(theme)=>document.documentElement.classList.toggle('dark',theme==='dark');applyTheme(localStorage.getItem('theme')||'light');
         document.body.addEventListener('click',e=>{if(e.target.closest('#theme-toggle')){const newTheme=document.documentElement.classList.contains('dark')?'light':'dark';localStorage.setItem('theme',newTheme);applyTheme(newTheme);}});
-        loadData();
-        // --- NUEVO: Procesar datos de CRM al cargar ---
-        const invoiceFromCrm = localStorage.getItem('invoiceFromCrm');
-        if (invoiceFromCrm) {
-            prefilledData = JSON.parse(invoiceFromCrm);
-            localStorage.removeItem('invoiceFromCrm');
-            currentView = 'editor';
+        
+        // CORRECCIÓN: Cargar y crear clientes de Facturación
+        let storedClients = JSON.parse(localStorage.getItem('clients')) || [];
+        // Asegurarse de que el cliente "Consumidor Final" exista
+        const consumidorFinalId = 1;
+        if (!storedClients.find(c => c.id === consumidorFinalId)) {
+            storedClients.push({ id: consumidorFinalId, name: 'Consumidor Final', idNumber: 'N/A' });
         }
-        setTimeout(render,0);
+        
+        const crmData = JSON.parse(localStorage.getItem('crm_data_v1')) || { accounts: [] };
+        crmData.accounts.forEach(acc => {
+            if (!storedClients.find(c => c.id === acc.id)) {
+                storedClients.push({ id: acc.id, name: acc.name, idNumber: acc.idNumber });
+            }
+        });
+        clientsData = storedClients;
+        localStorage.setItem('clients', JSON.stringify(clientsData));
+
+        loadData();
+        
+        // CORRECCIÓN: Procesar factura desde POS al iniciar
+        const invoiceFromPos = localStorage.getItem('invoiceFromPos');
+        if (invoiceFromPos) {
+            prefilledData = JSON.parse(invoiceFromPos);
+            // Asegurarse de que `documentosData` se inicialice antes de agregar la factura
+            if (!documentosData.invoices) documentosData.invoices = [];
+            documentosData.invoices.push(prefilledData);
+            saveData();
+            localStorage.removeItem('invoiceFromPos');
+            currentView = 'list';
+            showToast('Factura del TPV creada con éxito.', 'success');
+        }
+
+        setTimeout(render, 0);
     };
     
     init();
