@@ -16,8 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 1. CONFIGURACIÓN INICIAL Y SELECTORES ---
     const dom = {
         themeToggle: document.getElementById('theme-toggle'),
-        headerCompanyName: document.getElementById('header-company-name'),
-        openSettingsBtn: document.getElementById('open-settings-btn'),
         tabsContainer: document.getElementById('tabs-container'),
         mainContent: document.getElementById('main-content'),
         modal: {
@@ -40,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let riskChartInstance = null;
     
     const defaultData = {
-        settings: { companyName: 'Mi Empresa', numWorkers: 10 },
+        settings: {}, // Eliminamos la configuración de aquí
         employees: [], risks: [], incidents: [], trainings: [], medicalExams: [], inspections: [], annualPlan: [], actionPlans: []
     };
 
@@ -106,10 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if(currentModule === 'dashboard') updateDashboard();
             if(currentModule === 'indicators') calculateAndRenderIndicators();
-            if(currentModule === 'more-modules') renderMoreModulesSection(); // <-- LÍNEA AÑADIDA
+            if(currentModule === 'more-modules') renderMoreModulesSection();
         }
         
-        dom.headerCompanyName.textContent = sstData.settings.companyName || 'Gestión SG-SST';
         feather.replace();
     };
 
@@ -152,11 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!section) return;
         section.innerHTML = `
             <h2 class="text-2xl font-bold mb-4">Indicadores de Gestión (Resolución 0312 de 2019)</h2>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Estos valores se calculan con base en los datos de tu empresa (⚙️) y los registros de incidentes de los últimos 12 meses.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Estos valores se calculan con base en los datos de los empleados registrados en RRHH y los incidentes del último año.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="indicators-grid"></div>`;
         
         const grid = section.querySelector('#indicators-grid');
-        const N = parseInt(sstData.settings.numWorkers, 10) || 0;
+        const N = (sstData.employees || []).filter(e => e.status === 'Activo').length;
         const oneYearAgo = new Date(); oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
         const incidentsLastYear = sstData.incidents.filter(i => new Date(i.date) >= oneYearAgo);
         const accidentsLastYear = incidentsLastYear.filter(i => i.type === 'Accidente de Trabajo');
@@ -222,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         risks: { title: 'Matriz de Riesgos', headers: ['Proceso/Actividad', 'Clasificación', 'Nivel de Riesgo', 'Controles', 'Acciones'] },
         incidents: { title: 'Reporte de Incidentes', headers: ['Fecha', 'Tipo', 'Descripción', 'Involucrados', 'Acciones'] },
         actionPlans: { title: 'Planes de Acción', headers: ['Tarea', 'Origen', 'Responsable', 'Fecha Límite', 'Estado', 'Acciones'] },
-        employees: { title: 'Empleados', headers: ['Nombre', 'Cédula', 'Cargo', 'Acciones'] },
+        employees: { title: 'Empleados (desde RRHH)', headers: ['Nombre', 'Cédula', 'Cargo', 'Acciones'] },
         trainings: { title: 'Capacitaciones', headers: ['Tema', 'Fecha', 'Instructor', 'Estado', 'Acciones'] },
         medicalExams: { title: 'Exámenes Médicos', headers: ['Empleado', 'Tipo de Examen', 'Fecha', 'Concepto', 'Acciones'] },
         inspections: { title: 'Inspecciones de Seguridad', headers: ['Área/Equipo', 'Fecha', 'Responsable', 'Estado', 'Acciones'] }
@@ -240,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tableSection.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
                 <h2 id="table-title" class="text-2xl font-bold">${config.title}</h2>
-                <button id="add-item-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center">
+                <button id="add-item-btn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-blue-700 flex items-center ${moduleKey === 'employees' ? 'hidden' : ''}">
                     <i data-feather="plus" class="mr-2"></i> Agregar
                 </button>
             </div>
@@ -253,6 +250,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>`;
         
+        if (moduleKey === 'employees') {
+            const infoBanner = document.createElement('div');
+            infoBanner.className = "bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4";
+            infoBanner.setAttribute('role', 'alert');
+            infoBanner.innerHTML = `<p class="font-bold">Información</p><p>La gestión de empleados (crear, editar, eliminar) se realiza desde el módulo de <strong>Recursos Humanos</strong>.</p>`;
+            tableSection.insertBefore(infoBanner, tableSection.children[1]);
+        }
+
         tableSection.querySelector('#add-item-btn').onclick = () => openFormModal(currentModule);
         renderTable(moduleKey);
     };
@@ -282,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'risks': const riskColor = item.riskLevel === 'I' ? 'text-red-600' : item.riskLevel === 'II' ? 'text-orange-500' : 'text-yellow-500'; cellsHTML = `<td><div class="font-medium">${item.process}</div><div class="text-sm text-gray-500">${item.task}</div></td><td>${item.classification}</td><td class="font-bold ${riskColor}">${item.riskLevel} - ${item.riskInterpretation}</td><td>${item.controls}</td>`; extraActions = `<button onclick="window.createActionPlan('Riesgo', ${item.id}, 'Controlar riesgo: ${item.task.replace(/'/g, "\\'")}')" class="text-green-600 hover:text-green-900 mr-2" title="Crear Plan de Acción"><i data-feather="plus-circle" class="h-5 w-5"></i></button>`; break;
                 case 'incidents': cellsHTML = `<td>${item.date}</td><td>${item.type}</td><td>${item.description}</td><td>${item.involved}</td>`; extraActions = `<button onclick="window.createActionPlan('Incidente', ${item.id}, 'Investigar incidente: ${item.description.replace(/'/g, "\\'")}')" class="text-green-600 hover:text-green-900 mr-2" title="Crear Plan de Acción"><i data-feather="plus-circle" class="h-5 w-5"></i></button>`; break;
                 case 'actionPlans': cellsHTML = `<td>${item.task}</td><td>${item.sourceType} N° ${item.sourceId}</td><td>${getEmployeeName(item.responsible)}</td><td>${item.dueDate}</td><td><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'Completado' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'}">${item.status}</span></td>`; break;
-                case 'employees': cellsHTML = `<td>${item.name}</td><td>${item.idNumber}</td><td>${item.position}</td>`; break;
+                case 'employees': cellsHTML = `<td>${item.name}</td><td>${item.idNumber}</td><td>${item.position}</td>`; extraActions = `<a href="./recursoshumanos.html" class="text-blue-600 hover:text-blue-800" title="Gestionar en RRHH"><i data-feather="external-link" class="h-5 w-5"></i></a>`; break;
                 case 'trainings': cellsHTML = `<td>${item.topic}</td><td>${item.date}</td><td>${item.instructor}</td><td><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'Realizada' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'}">${item.status}</span></td>`; break;
                 case 'medicalExams': cellsHTML = `<td>${getEmployeeName(item.employeeId)}</td><td>${item.examType}</td><td>${item.date}</td><td>${item.result}</td>`; break;
                 case 'inspections': cellsHTML = `<td>${item.area}</td><td>${item.date}</td><td>${getEmployeeName(item.responsible)}</td><td><span class="px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'Conforme' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'}">${item.status}</span></td>`; extraActions = item.status === 'No Conforme' ? `<button onclick="window.createActionPlan('Inspección', ${item.id}, 'Corregir hallazgo en: ${item.area.replace(/'/g, "\\'")}')" class="text-green-600 hover:text-green-900 mr-2" title="Crear Plan de Acción"><i data-feather="plus-circle" class="h-5 w-5"></i></button>`: ''; break;
@@ -313,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         form.querySelector('[name="riskInterpretation"]').value = gtc45.interpretacion[nivelRiesgo];
     };
     const formTemplates = {
-        settings: (data = sstData.settings) => `<div class="space-y-4"><p class="text-sm text-gray-500">Estos datos son usados para calcular los indicadores de accidentalidad.</p><div><label class="block text-sm font-medium">Nombre de la Empresa</label><input type="text" name="companyName" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.companyName || ''}"></div><div><label class="block text-sm font-medium">Número Promedio de Trabajadores</label><input type="number" name="numWorkers" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.numWorkers || ''}"></div></div><div class="flex justify-end mt-6"><button type="button" class="bg-gray-300 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Guardar</button></div>`,
         employees: (data = {}) => `<input type="hidden" name="id" value="${data.id || ''}"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Nombre Completo</label><input type="text" name="name" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.name || ''}" required></div><div><label class="block text-sm font-medium">Cédula</label><input type="text" name="idNumber" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.idNumber || ''}"></div></div><div class="mt-4"><label class="block text-sm font-medium">Cargo</label><input type="text" name="position" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.position || ''}"></div><div class="flex justify-end mt-6"><button type="button" class="bg-gray-300 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Guardar</button></div>`,
         annualPlan: (data = {}) => `<input type="hidden" name="id" value="${data.id || ''}"><div><label class="block text-sm font-medium">Actividad</label><input type="text" name="activity" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.activity || ''}" required></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"><div><label class="block text-sm font-medium">Responsable</label><select name="responsible" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700">${getEmployeeOptions(data.responsible)}</select></div><div><label class="block text-sm font-medium">Fecha Límite</label><input type="date" name="dueDate" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.dueDate || ''}" required></div></div><div class="mt-4"><label class="block text-sm font-medium">Estado</label><select name="status" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" required><option ${data.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option><option ${data.status === 'En Progreso' ? 'selected' : ''}>En Progreso</option><option ${data.status === 'Completado' ? 'selected' : ''}>Completado</option></select></div><div class="flex justify-end mt-6"><button type="button" class="bg-gray-300 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Guardar</button></div>`,
         risks: (data = {}) => `<input type="hidden" name="id" value="${data.id || ''}"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Proceso</label><input type="text" name="process" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.process || ''}" required></div><div><label class="block text-sm font-medium">Actividad</label><input type="text" name="task" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700" value="${data.task || ''}" required></div></div><div class="mt-4"><label class="block text-sm font-medium">Clasificación del Peligro</label><select name="classification" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700"><option>Biológico</option><option>Físico</option><option>Químico</option><option>Psicosocial</option><option>Biomecánico</option><option>Condiciones de Seguridad</option><option>Fenómenos Naturales</option></select></div><div class="mt-4 border-t pt-4"><p class="font-semibold mb-2">Evaluación del Riesgo (GTC 45)</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="block text-sm font-medium">Nivel de Deficiencia (ND)</label><select name="deficiencyLevel" class="gtc45-calc mt-1 block w-full border rounded-md p-2 dark:bg-gray-700"><option value="10">Muy Alto</option><option value="6">Alto</option><option value="2">Medio</option><option value="0">Bajo</option></select></div><div><label class="block text-sm font-medium">Nivel de Exposición (NE)</label><select name="exposureLevel" class="gtc45-calc mt-1 block w-full border rounded-md p-2 dark:bg-gray-700"><option value="4">Continua</option><option value="3">Frecuente</option><option value="2">Ocasional</option><option value="1">Esporádica</option></select></div><div><label class="block text-sm font-medium">Nivel de Consecuencia (NC)</label><select name="consequenceLevel" class="gtc45-calc mt-1 block w-full border rounded-md p-2 dark:bg-gray-700"><option value="100">Mortal</option><option value="60">Muy Grave</option><option value="25">Grave</option><option value="10">Leve</option></select></div></div><div class="grid grid-cols-3 gap-4 mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded"><div class="text-center"><p class="text-xs">Nivel Probabilidad (NP=ND+NE)</p><p class="font-bold text-lg"><span id="np_level">--</span> (<span id="np_value">--</span>)</p></div><div class="text-center"><p class="text-xs">Nivel Riesgo (NR=NPxNC)</p><p class="font-bold text-lg" id="ir_value">--</p></div><div class="text-center"><p class="text-xs">Nivel / Interpretación</p><div class="flex justify-center items-center font-bold text-lg"><input type="text" name="riskLevel" class="w-8 bg-transparent text-center p-0 border-0" readonly> - <input type="text" name="riskInterpretation" class="w-full bg-transparent p-0 border-0" readonly></div></div></div></div><div class="mt-4"><label class="block text-sm font-medium">Controles Existentes (Fuente, Medio, Individuo)</label><textarea name="controls" rows="2" class="mt-1 block w-full border rounded-md p-2 dark:bg-gray-700">${data.controls || ''}</textarea></div><div class="flex justify-end mt-6"><button type="button" class="bg-gray-300 dark:bg-gray-600 font-semibold py-2 px-4 rounded-lg mr-2" id="cancel-btn">Cancelar</button><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">Guardar</button></div>`,
@@ -328,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentModule = moduleKey;
         editingId = id;
         const itemData = id ? { ...sstData[moduleKey].find(i => i.id == id) } : { ...prefillData };
-        const titles = { settings: 'Configuración de la Empresa', employees: id ? 'Editar Empleado' : 'Agregar Empleado', annualPlan: id ? 'Editar Actividad' : 'Agregar Actividad al Plan', risks: id ? 'Editar Riesgo' : 'Identificar Peligro', incidents: id ? 'Editar Reporte' : 'Reportar Incidente', trainings: id ? 'Editar Capacitación' : 'Programar Capacitación', medicalExams: id ? 'Editar Examen' : 'Registrar Examen Médico', inspections: id ? 'Editar Inspección' : 'Registrar Inspección', actionPlans: id ? 'Editar Plan de Acción' : 'Crear Plan de Acción' };
+        const titles = { employees: id ? 'Editar Empleado' : 'Agregar Empleado', annualPlan: id ? 'Editar Actividad' : 'Agregar Actividad al Plan', risks: id ? 'Editar Riesgo' : 'Identificar Peligro', incidents: id ? 'Editar Reporte' : 'Reportar Incidente', trainings: id ? 'Editar Capacitación' : 'Programar Capacitación', medicalExams: id ? 'Editar Examen' : 'Registrar Examen Médico', inspections: id ? 'Editar Inspección' : 'Registrar Inspección', actionPlans: id ? 'Editar Plan de Acción' : 'Crear Plan de Acción' };
         dom.modal.title.textContent = titles[moduleKey] || 'Formulario';
         dom.modal.mainForm.innerHTML = formTemplates[moduleKey](itemData);
         if (moduleKey === 'risks') { dom.modal.mainForm.querySelectorAll('.gtc45-calc').forEach(el => el.addEventListener('change', calculateRiskLevel)); if (id || Object.keys(itemData).length > 0) calculateRiskLevel(); }
@@ -344,8 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const formData = new FormData(dom.modal.mainForm);
         const data = Object.fromEntries(formData.entries());
-        if (currentModule === 'settings') { sstData.settings = { ...sstData.settings, ...data }; showToast('Configuración guardada'); } 
-        else { if (editingId) { const index = sstData[currentModule].findIndex(i => i.id == editingId); sstData[currentModule][index] = { ...sstData[currentModule][index], ...data, id: editingId }; showToast('Registro actualizado'); } else { data.id = Date.now(); sstData[currentModule].push(data); showToast('Registro agregado'); } renderTable(currentModule); }
+        if (editingId) { const index = sstData[currentModule].findIndex(i => i.id == editingId); sstData[currentModule][index] = { ...sstData[currentModule][index], ...data, id: editingId }; showToast('Registro actualizado'); } else { data.id = Date.now(); sstData[currentModule].push(data); showToast('Registro agregado'); } renderTable(currentModule);
         saveData();
         renderPage();
         toggleModal(dom.modal.el, false);
@@ -373,7 +376,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(newTheme);
             renderPage();
         });
-        dom.openSettingsBtn.addEventListener('click', () => openFormModal('settings'));
         dom.modal.closeBtn.addEventListener('click', () => toggleModal(dom.modal.el, false));
     };
     

@@ -6,13 +6,9 @@
     <title>Suite Empresarial - Tu Negocio, Simplificado</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(37,99,235)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='2' ry='2'></rect><path d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'></path></svg>" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <link rel="stylesheet" href="style.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
     
     <script>
         tailwind.config = { darkMode: 'class' }
@@ -30,7 +26,7 @@
             <nav class="hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-lg md:shadow-none md:static md:flex md:items-center md:bg-transparent dark:md:bg-transparent">
                 <div class="flex flex-col md:flex-row md:space-x-6">
                     <a href="#modulos" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Módulos</a>
-                    <a href="#precios" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Precios</a>
+                    <a href="#precios" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Planes</a>
                     <a href="#nosotros" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Nosotros</a>
                     <a href="#contacto" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Contacto</a>
                 </div>
@@ -38,7 +34,7 @@
 
             <div class="flex items-center gap-4">
                 <a href="./plan gratis/inicio.html" class="hidden md:block border border-blue-600 text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 dark:text-white dark:hover:bg-gray-700 transition-colors">
-                    Plan Gratis
+                    Probar Gratis
                 </a>
                 <a href="./login.html" class="hidden md:block bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors">
                     Ingresar
@@ -57,12 +53,12 @@
     <main>
         <section class="pt-32 pb-20 text-center bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6 animate-fade-in-up">
-                <h2 class="text-4xl md:text-6xl font-bold mb-4">Tu Negocio, Simplificado</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-                    La plataforma todo-en-uno que centraliza tus finanzas, ventas, operaciones y talento humano en un solo lugar.
+                <h2 class="text-4xl md:text-6xl font-extrabold mb-4 text-gray-900 dark:text-white">La Herramienta Definitiva para tu Negocio</h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto">
+                    Centraliza, automatiza y optimiza cada área de tu empresa con nuestra plataforma todo-en-uno. Desde finanzas hasta ventas, todo bajo control.
                 </p>
                 <a href="#precios" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-transform hover:scale-105 transform">
-                    Comienza Ahora
+                    Ver Planes
                 </a>
             </div>
         </section>
@@ -70,135 +66,111 @@
         <section id="modulos" class="py-20">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12 animate-on-scroll">
-                    <h3 class="text-3xl font-bold">Una Solución Integral</h3>
-                    <p class="text-gray-500 mt-2">Descubre todos los módulos que Suite Empresarial tiene para ofrecer.</p>
+                    <span class="text-blue-600 font-semibold">Todo en un solo lugar</span>
+                    <h3 class="text-3xl font-bold mt-2">Una Solución Integral para Cada Necesidad</h3>
+                    <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Explora los módulos diseñados para potenciar cada faceta de tu operación diaria.</p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="dollar-sign" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Finanzas</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Gestiona facturación, compras, tesorería y nómina de forma integrada.
-                        </p>
-                    </div>
-                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="target" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">CRM y Ventas</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Sigue prospectos, oportunidades y relaciones con clientes para aumentar tus ventas.
-                        </p>
-                    </div>
-                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="archive" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Inventario</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Mantén el control de tu stock, gestiona tu almacén y optimiza tus niveles de inventario.
-                        </p>
-                    </div>
-                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="users" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Talento Humano</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                           Administra empleados, contratos, ausencias y documentos importantes.
-                        </p>
-                    </div>
-                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="shield" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">SG-SST</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Gestiona el Sistema de Gestión de Seguridad y Salud en el Trabajo de tu empresa.
-                        </p>
-                    </div>
-                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
-                        <i data-feather="phone-call" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Call Center</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Administra las llamadas, agentes y tareas de tu centro de atención telefónica.
-                        </p>
+                        <i data-feather="file-text" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Facturación</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Crea, envía y gestiona facturas, notas crédito y más.</p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="trending-up" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
                         <h4 class="text-xl font-semibold mb-2">Cobranza</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                            Lleva un control detallado de tus cuentas por cobrar y mejora tu flujo de caja.
-                        </p>
+                        <p class="text-gray-600 dark:text-gray-400">Mejora tu flujo de caja con un seguimiento proactivo de tu cartera.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="shopping-cart" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Compras</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Administra proveedores y controla tus órdenes de compra.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="activity" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Tesorería</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Controla el flujo de caja, bancos y conciliaciones bancarias.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="dollar-sign" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Nómina</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Automatiza la liquidación y el pago de la nómina de tus empleados.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="users" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Talento Humano</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Gestiona el ciclo de vida de tus empleados y sus documentos.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="target" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">CRM y Ventas</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Convierte prospectos en clientes y gestiona tus relaciones.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="shopping-bag" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Punto de Venta (POS)</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Agiliza tus ventas en tienda con una interfaz rápida e integrada.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="archive" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Inventario</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Optimiza tu stock, gestiona almacenes y evita pérdidas.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="shield" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">SG-SST</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Cumple con la normativa y gestiona la seguridad y salud laboral.</p>
+                    </div>
+                    <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
+                        <i data-feather="phone-call" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
+                        <h4 class="text-xl font-semibold mb-2">Call Center</h4>
+                        <p class="text-gray-600 dark:text-gray-400">Administra llamadas, agentes y tareas de tu centro de atención.</p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="pie-chart" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
                         <h4 class="text-xl font-semibold mb-2">Reportes Gerenciales</h4>
-                        <p class="text-gray-600 dark:text-gray-400">
-                           Visualiza la salud de tu negocio con indicadores clave de todas las áreas.
-                        </p>
+                        <p class="text-gray-600 dark:text-gray-400">Obtén una vista 360° de tu negocio con indicadores en tiempo real.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="testimonios" class="py-20 bg-white dark:bg-gray-800">
+        <section id="precios" class="py-20 bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12 animate-on-scroll">
-                    <h3 class="text-3xl font-bold">Lo que dicen nuestros clientes</h3>
-                    <p class="text-gray-500 mt-2">Empresas en Colombia ya confían en nosotros.</p>
+                    <span class="text-blue-600 font-semibold">Planes Flexibles</span>
+                    <h3 class="text-3xl font-bold mt-2">Elige el Plan Perfecto para Ti</h3>
+                    <p class="text-gray-500 mt-2">Comienza gratis o escala con nuestras soluciones profesionales. Sin contratos a largo plazo.</p>
                 </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="testimonial-card bg-gray-100 dark:bg-gray-700 p-6 rounded-lg animate-on-scroll">
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">"Suite Empresarial ha transformado la forma en que gestionamos nuestras finanzas. Ahora tenemos todo centralizado y podemos tomar mejores decisiones."</p>
-                        <div class="font-semibold">- Ana María Restrepo, Gerente de Finanzas en "Logística Andina SAS", Bogotá</div>
-                    </div>
-                    <div class="testimonial-card bg-gray-100 dark:bg-gray-700 p-6 rounded-lg animate-on-scroll">
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">"El módulo de CRM es increíblemente fácil de usar y nos ha ayudado a aumentar nuestras ventas en un 30% en solo seis meses."</p>
-                        <div class="font-semibold">- Carlos Gutiérrez, Director Comercial en "Distripartes del Valle", Cali</div>
-                    </div>
-                    <div class="testimonial-card bg-gray-100 dark:bg-gray-700 p-6 rounded-lg animate-on-scroll">
-                        <p class="text-gray-600 dark:text-gray-400 mb-4">"La gestión de inventario siempre fue un dolor de cabeza para nosotros. Con Suite Empresarial, hemos optimizado nuestro stock y reducido las pérdidas."</p>
-                        <div class="font-semibold">- Sofia Vergara, Jefe de Operaciones en "Confecciones de la Sabana", Medellín</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="precios" class="py-20">
-            <div class="container mx-auto px-6">
-                <div class="text-center mb-12 animate-on-scroll">
-                    <h3 class="text-3xl font-bold">Elige tu Plan</h3>
-                    <p class="text-gray-500 mt-2">Precios claros y sin sorpresas, pensados para empresas en crecimiento.</p>
-                </div>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll flex flex-col h-full">
-                        <h4 class="text-xl font-semibold mb-2">Gratis</h4>
-                        <p class="text-4xl font-bold mb-4">$0</p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
-                            <li>1 Usuario</li>
-                            <li>Módulos limitados</li>
-                            <li>Información local (no en la nube)</li>
-                            <li>Almacenamiento limitado de imágenes y documentos</li>
+                <div class="flex flex-wrap justify-center gap-8">
+                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-8 rounded-lg text-center animate-on-scroll flex flex-col h-full w-full max-w-sm">
+                        <h4 class="text-2xl font-semibold mb-2">Inicia</h4>
+                        <p class="text-5xl font-bold mb-4">$0<span class="text-lg font-normal text-gray-500">/para siempre</span></p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">Ideal para freelancers o pequeñas empresas que empiezan a organizarse.</p>
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-3 text-left flex-grow">
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>1 Usuario</strong></li>
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Acceso a todos los módulos</li>
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Funcionalidad básica</li>
+                            <li class="flex items-center"><i data-feather="x" class="h-5 w-5 text-red-500 mr-2"></i>Datos almacenados <strong>localmente</strong></li>
+                            <li class="flex items-center"><i data-feather="x" class="h-5 w-5 text-red-500 mr-2"></i>Sin almacenamiento en la nube</li>
                         </ul>
-                        <a href="./plan gratis/inicio.html" class="mt-8 block bg-gray-200 text-gray-800 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
-                            Empezar Gratis
+                        <a href="./plan gratis/inicio.html" class="mt-8 block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            Comenzar Gratis
                         </a>
                     </div>
-                    <div class="pricing-card border-2 border-blue-600 p-6 rounded-lg text-center relative animate-on-scroll flex flex-col h-full">
-                        <span class="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">Más Popular</span>
-                        <h4 class="text-xl font-semibold mb-2">Pro</h4>
-                        <p class="text-4xl font-bold mb-4">$299.000<span class="text-lg font-normal">/mes</span></p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
-                            <li>Hasta 5 usuarios</li>
-                            <li>Todos los módulos incluidos</li>
-                            <li>Soporte prioritario</li>
+                    <div class="pricing-card border-2 border-blue-600 p-8 rounded-lg text-center relative animate-on-scroll flex flex-col h-full w-full max-w-sm">
+                        <span class="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">Recomendado</span>
+                        <h4 class="text-2xl font-semibold mb-2">Profesional</h4>
+                        <p class="text-5xl font-bold mb-4">A tu Medida</p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">Para empresas en crecimiento que necesitan potencia, seguridad y soporte.</p>
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-3 text-left flex-grow">
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>Usuarios a convenir</strong></li>
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Todos los módulos con funciones avanzadas</li>
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>Almacenamiento seguro en la nube</strong></li>
+                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Copias de seguridad automáticas</li>
+                             <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Soporte prioritario por WhatsApp y email</li>
                         </ul>
-                        <button id="elegir-plan-pro" class="mt-8 block w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                            Elegir Plan
-                        </button>
-                    </div>
-                    <div class="pricing-card border border-gray-200 dark:border-gray-700 p-6 rounded-lg text-center animate-on-scroll flex flex-col h-full">
-                        <h4 class="text-xl font-semibold mb-2">Corporativo</h4>
-                        <p class="text-4xl font-bold mb-4">Contáctanos</p>
-                        <ul class="text-gray-600 dark:text-gray-400 space-y-2 flex-grow">
-                            <li>Usuarios ilimitados</li>
-                            <li>Integraciones personalizadas</li>
-                            <li>Soporte dedicado</li>
-                        </ul>
-                        <a href="#contacto" class="mt-8 block bg-gray-200 text-gray-800 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 transition-colors">
+                        <a href="https://wa.me/573001234567?text=Hola,%20estoy%20interesado%20en%20el%20Plan%20Profesional%20de%20Suite%20Empresarial." target="_blank" class="mt-8 block w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
                             Contactar a Ventas
                         </a>
                     </div>
@@ -206,36 +178,44 @@
             </div>
         </section>
 
-        <section id="nosotros" class="py-20 bg-white dark:bg-gray-800">
+        <section id="nosotros" class="py-20">
             <div class="container mx-auto px-6 text-center animate-on-scroll">
-                <h3 class="text-3xl font-bold mb-4">Nuestra Misión</h3>
+                 <span class="text-blue-600 font-semibold">Nuestra Misión</span>
+                <h3 class="text-3xl font-bold mt-2 mb-4">Empoderando a las Empresas Colombianas</h3>
                 <p class="max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-                    En Suite Empresarial, nuestra misión es empoderar a las empresas colombianas con herramientas de gestión intuitivas y poderosas. Creemos que la tecnología debe ser un aliado para el crecimiento, no una barrera. Por eso, hemos desarrollado una solución integral que simplifica la complejidad de la administración empresarial, permitiéndote enfocarte en lo que realmente importa: hacer crecer tu negocio.
+                    En Suite Empresarial, nuestra misión es democratizar el acceso a herramientas de gestión de primer nivel. Creemos que la tecnología debe ser un aliado para el crecimiento, no una barrera. Por eso, hemos desarrollado una solución integral que simplifica la administración, permitiéndote enfocarte en lo que realmente importa: hacer crecer tu negocio.
                 </p>
             </div>
         </section>
 
-        <section id="contacto" class="py-20">
+        <section id="contacto" class="py-20 bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6 text-center animate-on-scroll">
-                <h3 class="text-3xl font-bold mb-4">Ponte en Contacto</h3>
-                <p class="text-gray-500 mb-8">¿Tienes preguntas? Nuestro equipo está listo para ayudarte.</p>
-                <form class="max-w-xl mx-auto text-left">
-                    <div class="mb-4">
-                        <label for="name" class="block text-sm font-medium mb-1">Nombre</label>
-                        <input type="text" id="name" name="name" class="w-full border rounded-md p-2 dark:bg-gray-700">
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium mb-1">Correo Electrónico</label>
-                        <input type="email" id="email" name="email" class="w-full border rounded-md p-2 dark:bg-gray-700">
-                    </div>
-                    <div class="mb-4">
-                        <label for="message" class="block text-sm font-medium mb-1">Mensaje</label>
-                        <textarea id="message" name="message" rows="4" class="w-full border rounded-md p-2 dark:bg-gray-700"></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                        Enviar Mensaje
-                    </button>
-                </form>
+                <span class="text-blue-600 font-semibold">Hablemos</span>
+                <h3 class="text-3xl font-bold mt-2 mb-4">Ponte en Contacto</h3>
+                <p class="text-gray-500 mb-8">¿Tienes preguntas o necesitas una demo? Nuestro equipo está listo para ayudarte.</p>
+                <div class="max-w-xl mx-auto text-left">
+                     <a href="https://wa.me/573001234567?text=Hola,%20quisiera%20más%20información%20sobre%20Suite%20Empresarial." target="_blank" class="w-full mb-6 bg-green-500 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center">
+                        <i data-feather="message-circle" class="mr-3"></i> Chatea con nosotros por WhatsApp
+                    </a>
+                    <p class="text-center text-gray-500 mb-6">O envíanos un mensaje a través de este formulario:</p>
+                    <form>
+                        <div class="mb-4">
+                            <label for="name" class="block text-sm font-medium mb-1">Nombre</label>
+                            <input type="text" id="name" name="name" class="w-full border rounded-md p-2 dark:bg-gray-700">
+                        </div>
+                        <div class="mb-4">
+                            <label for="email" class="block text-sm font-medium mb-1">Correo Electrónico</label>
+                            <input type="email" id="email" name="email" class="w-full border rounded-md p-2 dark:bg-gray-700">
+                        </div>
+                        <div class="mb-4">
+                            <label for="message" class="block text-sm font-medium mb-1">Mensaje</label>
+                            <textarea id="message" name="message" rows="4" class="w-full border rounded-md p-2 dark:bg-gray-700"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
             </div>
         </section>
     </main>
@@ -251,19 +231,21 @@
                     <p class="text-gray-400">Simplificando la gestión para empresas en Colombia.</p>
                 </div>
                 <div>
-                    <h5 class="font-semibold mb-4">Solución</h5>
+                    <h5 class="font-semibold mb-4">Navegación</h5>
                     <ul class="space-y-2 text-gray-400">
                         <li><a href="#modulos" class="hover:text-white">Módulos</a></li>
-                        <li><a href="#precios" class="hover:text-white">Precios</a></li>
+                        <li><a href="#precios" class="hover:text-white">Planes</a></li>
+                        <li><a href="#nosotros" class="hover:text-white">Nosotros</a></li>
+                        <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h5 class="font-semibold mb-4">Compañía</h5>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#nosotros" class="hover:text-white">Sobre Nosotros</a></li>
-                        <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
-                        <li><a href="#" class="hover:text-white">Política de Privacidad</a></li>
-                    </ul>
+                    <h5 class="font-semibold mb-4">Síguenos</h5>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white" title="Facebook"><i data-feather="facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white" title="Instagram"><i data-feather="instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white" title="LinkedIn"><i data-feather="linkedin"></i></a>
+                    </div>
                 </div>
             </div>
             <div class="mt-8 border-t border-gray-700 pt-6 text-center text-gray-500">
@@ -273,6 +255,5 @@
     </footer>
 
     <script src="script.js"></script>
-    <script src="pagos.js"></script>
 </body>
 </html>
