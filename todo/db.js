@@ -1,11 +1,10 @@
-// Archivo: db.js
-
-// Importa la librería Dexie
+// Archivo: todo/db.js
 import Dexie from 'https://unpkg.com/dexie@3.2.3/dist/dexie.mjs';
 
-// Crea la base de datos y define el esquema
 export const db = new Dexie('SuiteEmpresarialDB');
-db.version(1).stores({
+
+// Se incrementa la versión a 6 para añadir el campo 'status' a los usuarios de la app
+db.version(6).stores({
     clients: '++id, name, idNumber',
     invoices: '++id, number, clientId, clientName, issueDate, total, status',
     creditNotes: '++id, number, clientId, clientName, issueDate, total, status',
@@ -27,6 +26,8 @@ db.version(1).stores({
     nominaNovelties: '++id, employeeId, period, type, concept, value',
     payrollHistory: '++id, period, records',
     sstData: '++id, section, data',
-    // Nueva tabla para usuarios administradores
-    admins: '++id, username, passwordHash, salt' 
+    admins: '++id, username, passwordHash, role, status',
+    paymentHistory: '++id, adminId, paymentMonth, paymentDate, amount, status',
+    // Tabla de usuarios actualizada con 'status'
+    appUsers: '++id, username, passwordHash, role, adminId, status' 
 });

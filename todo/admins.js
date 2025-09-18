@@ -1,10 +1,10 @@
-// Archivo: todo/superadmin.js
+// Archivo: todo/admins.js
 import { db } from './db.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     feather.replace();
 
-    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN (AÑADIDA) ---
+    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN (COMPLETA) ---
     const sidebar = document.getElementById('sidebar');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     if (window.innerWidth >= 768) {
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (!loggedInUser || loggedInUser.role !== 'superadmin') {
+    if (!loggedInUser || (loggedInUser.role !== 'admin' && loggedInUser.role !== 'superadmin')) {
         window.location.href = './login.html';
         return;
     }
@@ -48,39 +48,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
-    const renderAdmins = async () => {
-        const admins = await db.admins.toArray();
-        const tableBody = document.getElementById('admin-table-body');
-        tableBody.innerHTML = admins.map(admin => {
+    const renderUsers = async () => {
+        const users = await db.appUsers.where({ adminId: loggedInUser.id }).toArray();
+        const tableBody = document.getElementById('users-table-body');
+        tableBody.innerHTML = users.map(user => {
             const statusColors = {
                 'Activo': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
                 'Inactivo': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
             };
             return `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td class="px-6 py-4 font-medium">${admin.username}</td>
-                <td class="px-6 py-4">${admin.role}</td>
+                <td class="px-6 py-4 font-medium">${user.username}</td>
+                <td class="px-6 py-4">${user.role}</td>
                 <td class="px-6 py-4">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[admin.status] || ''}">
-                        ${admin.status}
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[user.status]}">
+                        ${user.status}
                     </span>
                 </td>
                 <td class="px-6 py-4 text-right flex justify-end gap-1">
-                    <button onclick="window.editAdmin(${admin.id})" title="Editar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="edit" class="h-4 w-4 text-blue-600"></i></button>
-                    <button onclick="window.deleteAdmin(${admin.id})" title="Eliminar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="trash-2" class="h-4 w-4 text-red-600"></i></button>
+                    <button onclick="window.editUser(${user.id})" title="Editar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="edit" class="h-4 w-4 text-blue-600"></i></button>
+                    <button onclick="window.deleteUser(${user.id})" title="Eliminar" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><i data-feather="trash-2" class="h-4 w-4 text-red-600"></i></button>
                 </td>
             </tr>
         `}).join('');
         feather.replace();
     };
 
-    window.editAdmin = async (id) => {
-        const admin = await db.admins.get(id);
-        if (admin) {
-            document.getElementById('admin-id').value = admin.id;
-            document.getElementById('username').value = admin.username;
-            document.getElementById('role').value = admin.role;
-            document.getElementById('status').value = admin.status || 'Activo';
+    window.editUser = async (id) => {
+        const user = await db.appUsers.get(id);
+        if (user) {
+            document.getElementById('user-id').value = user.id;
+            document.getElementById('username').value = user.username;
+            document.getElementById('role').value = user.role;
+            document.getElementById('status').value = user.status || 'Activo';
             document.getElementById('password').removeAttribute('required');
             document.getElementById('password').value = '';
             document.getElementById('save-btn').textContent = 'Guardar Cambios';
@@ -88,54 +88,61 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    window.deleteAdmin = async (id) => {
-        if (confirm('¿Estás seguro? Esto eliminará al administrador y todo su historial de pagos.')) {
-            await db.admins.delete(id);
-            await db.paymentHistory.where({ adminId: id }).delete();
-            await renderAdmins();
+    window.deleteUser = async (id) => {
+        if (confirm('¿Estás seguro de eliminar este usuario?')) {
+            await db.appUsers.delete(id);
+            await renderUsers();
         }
     };
-
-    const adminForm = document.getElementById('admin-form');
+    
+    const userForm = document.getElementById('user-form');
     const saveBtn = document.getElementById('save-btn');
     const cancelBtn = document.getElementById('cancel-edit-btn');
-    
-    adminForm.addEventListener('submit', async (e) => {
+
+    userForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const id = document.getElementById('admin-id').value;
+        const id = document.getElementById('user-id').value;
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
         const role = document.getElementById('role').value;
         const status = document.getElementById('status').value;
+        const adminId = loggedInUser.id;
+
+        const existingUser = await db.appUsers.where({ username }).first();
+        if (existingUser && existingUser.id !== parseInt(id)) {
+            alert('El nombre de usuario ya existe.');
+            return;
+        }
 
         if (id) {
             const updates = { username, role, status };
             if (password) {
                 updates.passwordHash = await hashPassword(password);
             }
-            await db.admins.update(parseInt(id), updates);
+            await db.appUsers.update(parseInt(id), updates);
         } else {
-            if (!password) return alert('La contraseña es requerida para nuevos administradores.');
+            if (!password) {
+                alert('La contraseña es obligatoria para crear un nuevo usuario.');
+                return;
+            }
             const passwordHash = await hashPassword(password);
-            await db.admins.add({ username, passwordHash, role, status });
+            await db.appUsers.add({ username, passwordHash, role, adminId, status });
         }
-        
-        adminForm.reset();
-        document.getElementById('admin-id').value = '';
-        document.getElementById('password').setAttribute('required', 'required');
-        saveBtn.textContent = 'Crear Administrador';
-        cancelBtn.classList.add('hidden');
-        await renderAdmins();
-    });
 
+        userForm.reset();
+        document.getElementById('user-id').value = '';
+        saveBtn.textContent = 'Crear Usuario';
+        cancelBtn.classList.add('hidden');
+        await renderUsers();
+    });
+    
     cancelBtn.addEventListener('click', () => {
-        adminForm.reset();
-        document.getElementById('admin-id').value = '';
-        document.getElementById('password').setAttribute('required', 'required');
-        saveBtn.textContent = 'Crear Administrador';
+        userForm.reset();
+        document.getElementById('user-id').value = '';
+        saveBtn.textContent = 'Crear Usuario';
         cancelBtn.classList.add('hidden');
     });
     
     await db.open();
-    await renderAdmins();
+    await renderUsers();
 });

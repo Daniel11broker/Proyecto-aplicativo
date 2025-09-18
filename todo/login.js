@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const themeToggle = document.getElementById('theme-toggle');
     const applyTheme = (theme) => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
-        feather.replace();
+        feather.replace(); // Vuelve a renderizar los iconos para el nuevo tema
     };
     const savedTheme = localStorage.getItem('theme') || 'light';
     applyTheme(savedTheme);
@@ -33,20 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hashedInput = await hashPassword(password);
         return hashedInput === storedHash;
     };
-
-    // Inicializar la base de datos y crear al superadministrador si no existe
-    await db.open();
-
-    const SUPERADMIN_USERNAME = 'Daniel11Broker';
-    const SUPERADMIN_PASSWORD = '001614DaCr$';
     
-    // Buscar si ya existe el superadmin
-    const existingSuperadmin = await db.admins.where({ username: SUPERADMIN_USERNAME }).first();
-    if (!existingSuperadmin) {
-        const passwordHash = await hashPassword(SUPERADMIN_PASSWORD);
-        await db.admins.add({ username: SUPERADMIN_USERNAME, passwordHash, role: 'superadmin' });
-        console.log('Superadministrador creado en la base de datos.');
-    }
+    await db.open();
 
     // Lógica del Formulario de Login
     const loginForm = document.getElementById('login-form');
@@ -58,18 +46,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         const password = document.getElementById('login-password').value;
         loginError.textContent = '';
 
-        const user = await db.admins.where({ username: username }).first();
+        // Paso 1: Intentar encontrar al usuario en la tabla de administradores/superadministradores
+        let user = await db.admins.where({ username }).first();
         
+        // Paso 2: Si no se encuentra, buscar en la tabla de usuarios de la aplicación (editar/lectura)
+        if (!user) {
+            user = await db.appUsers.where({ username }).first();
+        }
+
+        // Si se encontró un usuario y la contraseña es correcta
         if (user && await verifyPassword(password, user.passwordHash)) {
-            // Guardar el estado de la sesión
-            localStorage.setItem('loggedInUser', JSON.stringify({ username: user.username, role: user.role }));
             
+            // Verificación de cuenta activa para todos los roles (excepto superadmin)
+            if (user.role !== 'superadmin' && user.status === 'Inactivo') {
+                alert('Tu cuenta está desactivada. Por favor, contacta a tu administrador.');
+                loginError.textContent = 'Cuenta inactiva.';
+                return;
+            }
+            
+            // Guardar los datos del usuario en la sesión del navegador
+            localStorage.setItem('loggedInUser', JSON.stringify({ 
+                username: user.username, 
+                role: user.role, 
+                id: user.id,
+                adminId: user.adminId || null
+            }));
+            
+            // --- REDIRECCIÓN CORRECTA Y DEFINITIVA ---
             if (user.role === 'superadmin') {
                 window.location.href = './superadmin.html';
+            } else if (user.role === 'admin') {
+                // El 'admin' va a la interfaz para gestionar a sus usuarios
+                window.location.href = './admins.html'; 
             } else {
-                // Redireccionar a la página principal de administradores
+                // Los usuarios 'editar' y 'lectura' van a la interfaz principal de la aplicación
                 window.location.href = './plan_de_pago/inicio.html';
             }
+
         } else {
             loginError.textContent = 'Usuario o contraseña incorrectos.';
         }
