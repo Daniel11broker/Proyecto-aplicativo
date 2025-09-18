@@ -3,8 +3,8 @@ import Dexie from 'https://unpkg.com/dexie@3.2.3/dist/dexie.mjs';
 
 export const db = new Dexie('SuiteEmpresarialDB');
 
-// Se incrementa la versión a 6 para añadir el campo 'status' a los usuarios de la app
-db.version(6).stores({
+// Se incrementa la versión a 7 para añadir 'userLimit' a los admins.
+db.version(7).stores({
     clients: '++id, name, idNumber',
     invoices: '++id, number, clientId, clientName, issueDate, total, status',
     creditNotes: '++id, number, clientId, clientName, issueDate, total, status',
@@ -26,8 +26,8 @@ db.version(6).stores({
     nominaNovelties: '++id, employeeId, period, type, concept, value',
     payrollHistory: '++id, period, records',
     sstData: '++id, section, data',
-    admins: '++id, username, passwordHash, role, status',
+    // Tabla de administradores actualizada con 'userLimit'
+    admins: '++id, username, passwordHash, role, status, userLimit', 
     paymentHistory: '++id, adminId, paymentMonth, paymentDate, amount, status',
-    // Tabla de usuarios actualizada con 'status'
     appUsers: '++id, username, passwordHash, role, adminId, status' 
 });

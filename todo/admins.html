@@ -50,6 +50,15 @@
                 </div>
             </header>
 
+            <div id="user-limit-widget" class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex justify-center items-center gap-4 max-w-sm mx-auto">
+                <i data-feather="users" class="h-8 w-8 text-blue-500"></i>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Usuarios Creados</p>
+                    <p id="user-count-text" class="text-xl font-bold">0 / 0</p>
+                </div>
+            </div>
+
+
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8 max-w-2xl mx-auto">
                 <h2 class="text-xl font-semibold mb-4 border-b pb-2 dark:border-gray-700">Crear o Editar Usuario</h2>
                 <form id="user-form" class="space-y-4">
@@ -103,7 +112,7 @@
             </div>
         </div>
     </div>
-    
+    <div id="toast-container" class="fixed top-20 right-5 z-[1001]"></div>
     <script src="db.js" type="module"></script>
     <script src="admins.js" type="module"></script>
 </body>

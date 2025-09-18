@@ -39,6 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // --- ESTADO DE LA APLICACIÓN Y PAGINACIÓN ---
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
     // --- SELECTORES GLOBALES ---
     const dom = {
         kpi: {
@@ -49,6 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchInput: document.getElementById('search-input'),
         addAdminBtn: document.getElementById('add-admin-btn'),
         tableBody: document.getElementById('admin-table-body'),
+        paginationControls: document.getElementById('pagination-controls'),
         modal: {
             el: document.getElementById('form-modal'),
             title: document.getElementById('modal-title'),
@@ -59,6 +64,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             passwordInput: document.getElementById('password'),
             roleInput: document.getElementById('role'),
             statusInput: document.getElementById('status'),
+            userLimitContainer: document.getElementById('user-limit-container'),
+            userLimitInput: document.getElementById('userLimit'),
             saveBtn: document.getElementById('save-btn'),
             cancelBtn: document.getElementById('cancel-edit-btn')
         },
@@ -101,22 +108,62 @@ document.addEventListener('DOMContentLoaded', async () => {
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
+    const renderPagination = (totalItems) => {
+        const totalPages = Math.ceil(totalItems / rowsPerPage);
+        dom.paginationControls.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        let paginationHTML = `
+            <span class="text-sm text-gray-700 dark:text-gray-400">
+                Página <span class="font-semibold">${currentPage}</span> de <span class="font-semibold">${totalPages}</span>
+            </span>
+            <div class="inline-flex mt-2 xs:mt-0">
+                <button id="prev-page" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    Anterior
+                </button>
+                <button id="next-page" class="flex items-center justify-center px-3 h-8 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    Siguiente
+                </button>
+            </div>`;
+        dom.paginationControls.innerHTML = paginationHTML;
+
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+            }
+        });
+    };
+
     const renderPage = async () => {
         const searchTerm = dom.searchInput.value.toLowerCase();
-        let admins = await db.admins.toArray();
+        let allAdmins = await db.admins.toArray();
+        dom.kpi.total.textContent = allAdmins.length;
+        dom.kpi.active.textContent = allAdmins.filter(a => a.status === 'Activo').length;
+        dom.kpi.inactive.textContent = allAdmins.filter(a => a.status === 'Inactivo').length;
 
-        // Actualizar KPIs
-        dom.kpi.total.textContent = admins.length;
-        dom.kpi.active.textContent = admins.filter(a => a.status === 'Activo').length;
-        dom.kpi.inactive.textContent = admins.filter(a => a.status === 'Inactivo').length;
-
-        // Filtrar para la tabla
+        let filteredAdmins = allAdmins;
         if (searchTerm) {
-            admins = admins.filter(admin => admin.username.toLowerCase().includes(searchTerm));
+            filteredAdmins = allAdmins.filter(admin => admin.username.toLowerCase().includes(searchTerm));
         }
 
-        dom.tableBody.innerHTML = ''; // Limpiar tabla
-        admins.forEach(admin => {
+        const paginatedAdmins = filteredAdmins.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+        dom.tableBody.innerHTML = '';
+        paginatedAdmins.forEach(admin => {
             const statusColors = {
                 'Activo': 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
                 'Inactivo': 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
@@ -134,6 +181,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             dom.tableBody.appendChild(row);
         });
         feather.replace();
+        renderPagination(filteredAdmins.length);
+    };
+
+    const toggleUserLimitField = (role) => {
+        if (role === 'superadmin') {
+            dom.modal.userLimitContainer.classList.add('hidden');
+        } else {
+            dom.modal.userLimitContainer.classList.remove('hidden');
+        }
     };
 
     const openFormModal = (admin = null) => {
@@ -144,24 +200,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             dom.modal.usernameInput.value = admin.username;
             dom.modal.roleInput.value = admin.role;
             dom.modal.statusInput.value = admin.status;
+            dom.modal.userLimitInput.value = admin.userLimit || 5;
             dom.modal.passwordInput.removeAttribute('required');
             dom.modal.saveBtn.textContent = 'Guardar Cambios';
             dom.modal.cancelBtn.classList.remove('hidden');
+            toggleUserLimitField(admin.role);
         } else {
             dom.modal.title.textContent = 'Crear Administrador';
             dom.modal.idInput.value = '';
             dom.modal.passwordInput.setAttribute('required', 'required');
             dom.modal.saveBtn.textContent = 'Crear';
             dom.modal.cancelBtn.classList.add('hidden');
+            toggleUserLimitField('admin');
         }
         dom.modal.el.classList.remove('hidden');
     };
 
-    // --- EVENT LISTENERS ---
-    dom.searchInput.addEventListener('input', renderPage);
+    dom.searchInput.addEventListener('input', () => {
+        currentPage = 1;
+        renderPage();
+    });
     dom.addAdminBtn.addEventListener('click', () => openFormModal());
     dom.modal.closeBtn.addEventListener('click', () => dom.modal.el.classList.add('hidden'));
     dom.modal.cancelBtn.addEventListener('click', () => dom.modal.el.classList.add('hidden'));
+    dom.modal.roleInput.addEventListener('change', (e) => toggleUserLimitField(e.target.value));
     
     dom.tableBody.addEventListener('click', async (e) => {
         const editButton = e.target.closest('.edit-btn');
@@ -172,10 +234,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const deleteButton = e.target.closest('.delete-btn');
         if (deleteButton) {
             const adminId = parseInt(deleteButton.dataset.id);
-            showConfirmation('Confirmar Eliminación', '¿Estás seguro? Esta acción no se puede deshacer.', async () => {
+            const admin = await db.admins.get(adminId);
+            showConfirmation('Confirmar Eliminación', `¿Estás seguro de eliminar a '${admin.username}'?`, async () => {
                 await db.admins.delete(adminId);
                 await db.paymentHistory.where({ adminId }).delete();
-                showToast('Administrador eliminado.', 'success');
+                await db.appUsers.where({ adminId }).delete(); 
+                showToast(`Administrador '${admin.username}' eliminado.`, 'success');
                 await renderPage();
             });
         }
@@ -188,27 +252,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         const password = dom.modal.passwordInput.value;
         const role = dom.modal.roleInput.value;
         const status = dom.modal.statusInput.value;
-        
-        const data = { username, role, status };
-
-        if (id) { // Editando
+        let userLimit;
+        if (role === 'superadmin') {
+            userLimit = null;
+        } else {
+            userLimit = parseInt(dom.modal.userLimitInput.value);
+            if (isNaN(userLimit) || userLimit < 1) {
+                showToast('El límite de usuarios debe ser un número mayor a 0.', 'error');
+                return;
+            }
+        }
+        const data = { username, role, status, userLimit };
+        if (id) {
             if (password) {
                 data.passwordHash = await hashPassword(password);
             }
             await db.admins.update(parseInt(id), data);
-            showToast('Administrador actualizado con éxito.', 'success');
-        } else { // Creando
-            if (!password) return alert('La contraseña es requerida para nuevos administradores.');
+            showToast(`'${username}' actualizado.`, 'success');
+        } else {
+            if (!password) {
+                showToast('La contraseña es requerida.', 'error');
+                return;
+            }
             data.passwordHash = await hashPassword(password);
             await db.admins.add(data);
-            showToast('Administrador creado con éxito.', 'success');
+            showToast(`'${username}' creado con éxito.`, 'success');
         }
-        
         dom.modal.el.classList.add('hidden');
         await renderPage();
     });
 
-    // --- INICIALIZACIÓN ---
     await db.open();
     await renderPage();
 });

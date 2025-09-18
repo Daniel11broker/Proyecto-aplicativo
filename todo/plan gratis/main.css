@@ -13,29 +13,43 @@ button:disabled {
     cursor: not-allowed; 
 }
 
-/* --- Sidebar & Main Content Wrapper --- */
+/* --- Sidebar & Main Content Wrapper (REVISED FOR RESPONSIVENESS) --- */
 #sidebar { 
-    width: 5rem; 
+    width: 16rem; 
+    transform: translateX(-100%); 
+    transition: transform 0.3s ease-in-out;
 }
 #sidebar.expanded { 
-    width: 16rem; 
+    transform: translateX(0); 
 }
 #sidebar .sidebar-text {
-    opacity: 0; 
-    width: 0; 
-    transition: opacity 0.2s ease, width 0.2s ease;
-    white-space: nowrap; 
-    overflow: hidden;
-}
-#sidebar.expanded .sidebar-text { 
     opacity: 1; 
-    width: auto; 
-    margin-left: 0.75rem; 
+    margin-left: 0.75rem;
+    white-space: nowrap; 
 }
 #main-content-wrapper { 
     transition: margin-left 0.3s ease-in-out; 
+    margin-left: 0; 
 }
 @media (min-width: 768px) {
+    #sidebar { 
+        width: 5rem; 
+        transform: translateX(0); 
+        transition: width 0.3s ease-in-out; 
+    }
+    #sidebar.expanded { 
+        width: 16rem; 
+    }
+    #sidebar .sidebar-text {
+        opacity: 0; 
+        width: 0; 
+        transition: opacity 0.2s ease, width 0.2s ease;
+        overflow: hidden;
+    }
+    #sidebar.expanded .sidebar-text { 
+        opacity: 1; 
+        width: auto; 
+    }
     #main-content-wrapper { 
         margin-left: 5rem; 
     }
@@ -75,6 +89,13 @@ button:disabled {
 }
 .dark #theme-toggle-circle { 
     transform: translateX(24px); 
+}
+
+/* **NUEVA REGLA PARA OCULTAR BOTÓN EN MÓVIL** */
+@media (max-width: 767px) {
+    #main-content-wrapper header #theme-toggle {
+        display: none;
+    }
 }
 
 /* --- Modals, Toasts & Tabs --- */
@@ -124,4 +145,41 @@ button:disabled {
 .sortable { 
     cursor: pointer; 
     user-select: none; 
+}
+
+/* === REGLAS RESPONSIVE PARA PANELES === */
+.panel-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+.panel-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+.pagination-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* A partir de 640px (sm) los controles se ponen en fila */
+@media (min-width: 640px) {
+    .panel-header {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    .panel-controls {
+        flex-direction: row;
+        width: auto;
+    }
+    .pagination-controls {
+        flex-direction: row;
+        justify-content: space-between;
+    }
 }

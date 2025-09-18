@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    if (!loggedInUser || (loggedInUser.role !== 'admin' && loggedInUser.role !== 'superadmin')) {
+    if (!loggedInUser || (loggedInUser.role !== 'admin')) { // Solo admins
         window.location.href = './login.html';
         return;
     }
@@ -47,8 +47,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
+    
+    // Nueva notificación mejorada
+    const showNotification = (message, type = 'info') => {
+        const colors = {
+            info: 'bg-blue-500',
+            success: 'bg-green-500',
+            warning: 'bg-yellow-500',
+            error: 'bg-red-500',
+        };
+        const toastContainer = document.getElementById('toast-container') || document.body;
+        const toast = document.createElement('div');
+        toast.className = `fixed top-20 right-5 ${colors[type]} text-white py-2 px-4 rounded-lg shadow-lg z-50 animate-pulse`;
+        toast.textContent = message;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.remove('animate-pulse');
+            toast.style.transition = 'opacity 0.5s ease';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    };
 
-    const renderUsers = async () => {
+    const renderPage = async () => {
+        // Renderizar la tabla de usuarios
         const users = await db.appUsers.where({ adminId: loggedInUser.id }).toArray();
         const tableBody = document.getElementById('users-table-body');
         tableBody.innerHTML = users.map(user => {
@@ -71,6 +93,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </td>
             </tr>
         `}).join('');
+        
+        // **NUEVO: Renderizar el widget de límite de usuarios**
+        const adminData = await db.admins.get(loggedInUser.id);
+        const userLimit = adminData.userLimit || 5;
+        const currentUserCount = users.length;
+        document.getElementById('user-count-text').textContent = `${currentUserCount} / ${userLimit}`;
+        
         feather.replace();
     };
 
@@ -91,7 +120,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.deleteUser = async (id) => {
         if (confirm('¿Estás seguro de eliminar este usuario?')) {
             await db.appUsers.delete(id);
-            await renderUsers();
+            showNotification('Usuario eliminado correctamente.', 'success');
+            await renderPage(); // Actualiza la tabla y el contador
         }
     };
     
@@ -108,9 +138,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const status = document.getElementById('status').value;
         const adminId = loggedInUser.id;
 
+        // **VERIFICACIÓN DE LÍMITE DE USUARIOS**
+        if (!id) { // Solo al crear un nuevo usuario
+            const adminData = await db.admins.get(adminId);
+            const userLimit = adminData.userLimit || 5; // Límite por defecto si no está definido
+            const currentUserCount = await db.appUsers.where({ adminId }).count();
+            
+            if (currentUserCount >= userLimit) {
+                showNotification(`Has alcanzado el límite de ${userLimit} usuarios.`, 'error');
+                return;
+            }
+        }
+
         const existingUser = await db.appUsers.where({ username }).first();
         if (existingUser && existingUser.id !== parseInt(id)) {
-            alert('El nombre de usuario ya existe.');
+            showNotification('El nombre de usuario ya existe.', 'error');
             return;
         }
 
@@ -120,20 +162,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updates.passwordHash = await hashPassword(password);
             }
             await db.appUsers.update(parseInt(id), updates);
+            showNotification('Usuario actualizado correctamente.', 'success');
         } else {
             if (!password) {
-                alert('La contraseña es obligatoria para crear un nuevo usuario.');
+                showNotification('La contraseña es obligatoria para crear un nuevo usuario.', 'error');
                 return;
             }
             const passwordHash = await hashPassword(password);
             await db.appUsers.add({ username, passwordHash, role, adminId, status });
+            showNotification('Usuario creado con éxito.', 'success');
         }
 
         userForm.reset();
         document.getElementById('user-id').value = '';
         saveBtn.textContent = 'Crear Usuario';
         cancelBtn.classList.add('hidden');
-        await renderUsers();
+        await renderPage(); // Actualiza la tabla y el contador
     });
     
     cancelBtn.addEventListener('click', () => {
@@ -144,5 +188,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     await db.open();
-    await renderUsers();
+    await renderPage();
 });
