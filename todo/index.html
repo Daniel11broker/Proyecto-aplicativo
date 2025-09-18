@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suite Empresarial - Tu Negocio, Simplificado</title>
+    <title data-i18n="page.title">Suite Empresarial - Tu Negocio, Simplificado</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(37,99,235)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='15' rx='2' ry='2'></rect><path d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'></path></svg>" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://unpkg.com/i18next/i18next.min.js"></script>
+    <script src="https://unpkg.com/i18next-http-backend/i18nextHttpBackend.min.js"></script>
     <link rel="stylesheet" href="style.css">
     
     <script>
@@ -25,20 +27,28 @@
             
             <nav class="hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-lg md:shadow-none md:static md:flex md:items-center md:bg-transparent dark:md:bg-transparent">
                 <div class="flex flex-col md:flex-row md:space-x-6">
-                    <a href="#modulos" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Módulos</a>
-                    <a href="#precios" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Planes</a>
-                    <a href="#nosotros" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Nosotros</a>
-                    <a href="#contacto" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600">Contacto</a>
+                    <a href="#modulos" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600" data-i18n="header.modules"></a>
+                    <a href="#precios" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600" data-i18n="header.plans"></a>
+                    <a href="#nosotros" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600" data-i18n="header.about"></a>
+                    <a href="#contacto" class="block py-3 px-6 hover:bg-gray-100 dark:hover:bg-gray-700 md:p-0 md:hover:bg-transparent md:hover:text-blue-600" data-i18n="header.contact"></a>
                 </div>
             </nav>
 
             <div class="flex items-center gap-4">
-                <a href="./plan gratis/inicio.html" class="hidden md:block border border-blue-600 text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 dark:text-white dark:hover:bg-gray-700 transition-colors">
-                    Probar Gratis
+                <a href="./plan gratis/inicio.html" class="hidden md:block border border-blue-600 text-blue-600 font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-50 dark:text-white dark:hover:bg-gray-700 transition-colors" data-i18n="header.try_free">
                 </a>
-                <a href="./login.html" class="hidden md:block bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                    Ingresar
+                <a href="./login.html" class="hidden md:block bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow hover:bg-blue-700 transition-colors" data-i18n="header.login">
                 </a>
+                
+                <div class="relative">
+                    <select id="language-switcher" class="text-sm bg-gray-200 dark:bg-gray-700 border-none rounded-md py-2 pl-3 pr-8 appearance-none cursor-pointer">
+                        <option value="es">ES</option>
+                        <option value="en">EN</option>
+                        <option value="fr">FR</option>
+                        <option value="pt">PT</option>
+                        </select>
+                </div>
+
                 <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
                     <i data-feather="sun" class="h-5 w-5 block dark:hidden"></i>
                     <i data-feather="moon" class="h-5 w-5 hidden dark:block"></i>
@@ -53,12 +63,9 @@
     <main>
         <section class="pt-32 pb-20 text-center bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6 animate-fade-in-up">
-                <h2 class="text-4xl md:text-6xl font-extrabold mb-4 text-gray-900 dark:text-white">La Herramienta Definitiva para tu Negocio</h2>
-                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto">
-                    Centraliza, automatiza y optimiza cada área de tu empresa con nuestra plataforma todo-en-uno. Desde finanzas hasta ventas, todo bajo control.
-                </p>
-                <a href="#precios" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-transform hover:scale-105 transform">
-                    Ver Planes
+                <h2 class="text-4xl md:text-6xl font-extrabold mb-4 text-gray-900 dark:text-white" data-i18n="hero.title"></h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-3xl mx-auto" data-i18n="hero.subtitle"></p>
+                <a href="#precios" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-transform hover:scale-105 transform" data-i18n="hero.view_plans">
                 </a>
             </div>
         </section>
@@ -66,70 +73,70 @@
         <section id="modulos" class="py-20">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12 animate-on-scroll">
-                    <span class="text-blue-600 font-semibold">Todo en un solo lugar</span>
-                    <h3 class="text-3xl font-bold mt-2">Una Solución Integral para Cada Necesidad</h3>
-                    <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Explora los módulos diseñados para potenciar cada faceta de tu operación diaria.</p>
+                    <span class="text-blue-600 font-semibold" data-i18n="modules.tagline"></span>
+                    <h3 class="text-3xl font-bold mt-2" data-i18n="modules.title"></h3>
+                    <p class="text-gray-500 mt-2 max-w-2xl mx-auto" data-i18n="modules.subtitle"></p>
                 </div>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="file-text" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Facturación</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Crea, envía y gestiona facturas, notas crédito y más.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.billing.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.billing.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="trending-up" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Cobranza</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Mejora tu flujo de caja con un seguimiento proactivo de tu cartera.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.collections.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.collections.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="shopping-cart" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Compras</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Administra proveedores y controla tus órdenes de compra.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.purchases.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.purchases.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="activity" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Tesorería</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Controla el flujo de caja, bancos y conciliaciones bancarias.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.treasury.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.treasury.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="dollar-sign" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Nómina</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Automatiza la liquidación y el pago de la nómina de tus empleados.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.payroll.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.payroll.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="users" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Talento Humano</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Gestiona el ciclo de vida de tus empleados y sus documentos.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.hr.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.hr.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="target" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">CRM y Ventas</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Convierte prospectos en clientes y gestiona tus relaciones.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.crm.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.crm.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="shopping-bag" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Punto de Venta (POS)</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Agiliza tus ventas en tienda con una interfaz rápida e integrada.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.pos.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.pos.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="archive" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Inventario</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Optimiza tu stock, gestiona almacenes y evita pérdidas.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.inventory.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.inventory.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="shield" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">SG-SST</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Cumple con la normativa y gestiona la seguridad y salud laboral.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.ohs.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.ohs.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="phone-call" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Call Center</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Administra llamadas, agentes y tareas de tu centro de atención.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.callcenter.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.callcenter.desc"></p>
                     </div>
                     <div class="feature-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center animate-on-scroll">
                         <i data-feather="pie-chart" class="h-12 w-12 text-blue-600 mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold mb-2">Reportes Gerenciales</h4>
-                        <p class="text-gray-600 dark:text-gray-400">Obtén una vista 360° de tu negocio con indicadores en tiempo real.</p>
+                        <h4 class="text-xl font-semibold mb-2" data-i18n="modules.reports.title"></h4>
+                        <p class="text-gray-600 dark:text-gray-400" data-i18n="modules.reports.desc"></p>
                     </div>
                 </div>
             </div>
@@ -138,40 +145,38 @@
         <section id="precios" class="py-20 bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12 animate-on-scroll">
-                    <span class="text-blue-600 font-semibold">Planes Flexibles</span>
-                    <h3 class="text-3xl font-bold mt-2">Elige el Plan Perfecto para Ti</h3>
-                    <p class="text-gray-500 mt-2">Comienza gratis o escala con nuestras soluciones profesionales. Sin contratos a largo plazo.</p>
+                    <span class="text-blue-600 font-semibold" data-i18n="plans.tagline"></span>
+                    <h3 class="text-3xl font-bold mt-2" data-i18n="plans.title"></h3>
+                    <p class="text-gray-500 mt-2" data-i18n="plans.subtitle"></p>
                 </div>
                 <div class="flex flex-wrap justify-center gap-8">
                     <div class="pricing-card border border-gray-200 dark:border-gray-700 p-8 rounded-lg text-center animate-on-scroll flex flex-col h-full w-full max-w-sm">
-                        <h4 class="text-2xl font-semibold mb-2">Inicia</h4>
-                        <p class="text-5xl font-bold mb-4">$0<span class="text-lg font-normal text-gray-500">/para siempre</span></p>
-                        <p class="text-gray-600 dark:text-gray-400 mb-6">Ideal para freelancers o pequeñas empresas que empiezan a organizarse.</p>
+                        <h4 class="text-2xl font-semibold mb-2" data-i18n="plans.starter.title"></h4>
+                        <p class="text-5xl font-bold mb-4">$0<span class="text-lg font-normal text-gray-500" data-i18n="plans.starter.price_suffix"></span></p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6" data-i18n="plans.starter.description"></p>
                         <ul class="text-gray-600 dark:text-gray-400 space-y-3 text-left flex-grow">
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>1 Usuario</strong></li>
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Acceso a todos los módulos</li>
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Funcionalidad básica</li>
-                            <li class="flex items-center"><i data-feather="x" class="h-5 w-5 text-red-500 mr-2"></i>Datos almacenados <strong>localmente</strong></li>
-                            <li class="flex items-center"><i data-feather="x" class="h-5 w-5 text-red-500 mr-2"></i>Sin almacenamiento en la nube</li>
+                            <li class="flex items-center" data-i18n="plans.starter.feature1"></li>
+                            <li class="flex items-center" data-i18n="plans.starter.feature2"></li>
+                            <li class="flex items-center" data-i18n="plans.starter.feature3"></li>
+                            <li class="flex items-center" data-i18n="plans.starter.feature4"></li>
+                            <li class="flex items-center" data-i18n="plans.starter.feature5"></li>
                         </ul>
-                        <a href="./plan gratis/inicio.html" class="mt-8 block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                            Comenzar Gratis
+                        <a href="./plan gratis/inicio.html" class="mt-8 block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold py-3 px-8 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" data-i18n="plans.starter.cta">
                         </a>
                     </div>
                     <div class="pricing-card border-2 border-blue-600 p-8 rounded-lg text-center relative animate-on-scroll flex flex-col h-full w-full max-w-sm">
-                        <span class="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full">Recomendado</span>
-                        <h4 class="text-2xl font-semibold mb-2">Profesional</h4>
-                        <p class="text-5xl font-bold mb-4">A tu Medida</p>
-                        <p class="text-gray-600 dark:text-gray-400 mb-6">Para empresas en crecimiento que necesitan potencia, seguridad y soporte.</p>
+                        <span class="absolute top-0 -translate-y-1/2 bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full" data-i18n="plans.professional.badge"></span>
+                        <h4 class="text-2xl font-semibold mb-2" data-i18n="plans.professional.title"></h4>
+                        <p class="text-5xl font-bold mb-4" data-i18n="plans.professional.price"></p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6" data-i18n="plans.professional.description"></p>
                         <ul class="text-gray-600 dark:text-gray-400 space-y-3 text-left flex-grow">
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>Usuarios a convenir</strong></li>
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Todos los módulos con funciones avanzadas</li>
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i><strong>Almacenamiento seguro en la nube</strong></li>
-                            <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Copias de seguridad automáticas</li>
-                             <li class="flex items-center"><i data-feather="check" class="h-5 w-5 text-green-500 mr-2"></i>Soporte prioritario por WhatsApp y email</li>
+                            <li class="flex items-center" data-i18n="plans.professional.feature1"></li>
+                            <li class="flex items-center" data-i18n="plans.professional.feature2"></li>
+                            <li class="flex items-center" data-i18n="plans.professional.feature3"></li>
+                            <li class="flex items-center" data-i18n="plans.professional.feature4"></li>
+                            <li class="flex items-center" data-i18n="plans.professional.feature5"></li>
                         </ul>
-                        <a href="https://wa.me/573001234567?text=Hola,%20estoy%20interesado%20en%20el%20Plan%20Profesional%20de%20Suite%20Empresarial." target="_blank" class="mt-8 block w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                            Contactar a Ventas
+                        <a href="https://wa.me/573001234567?text=Hola,%20estoy%20interesado%20en%20el%20Plan%20Profesional%20de%20Suite%20Empresarial." target="_blank" class="mt-8 block w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors" data-i18n="plans.professional.cta">
                         </a>
                     </div>
                 </div>
@@ -180,39 +185,35 @@
 
         <section id="nosotros" class="py-20">
             <div class="container mx-auto px-6 text-center animate-on-scroll">
-                 <span class="text-blue-600 font-semibold">Nuestra Misión</span>
-                <h3 class="text-3xl font-bold mt-2 mb-4">Empoderando a las Empresas Colombianas</h3>
-                <p class="max-w-3xl mx-auto text-gray-600 dark:text-gray-400">
-                    En Suite Empresarial, nuestra misión es democratizar el acceso a herramientas de gestión de primer nivel. Creemos que la tecnología debe ser un aliado para el crecimiento, no una barrera. Por eso, hemos desarrollado una solución integral que simplifica la administración, permitiéndote enfocarte en lo que realmente importa: hacer crecer tu negocio.
-                </p>
+                 <span class="text-blue-600 font-semibold" data-i18n="about.tagline"></span>
+                <h3 class="text-3xl font-bold mt-2 mb-4" data-i18n="about.title"></h3>
+                <p class="max-w-3xl mx-auto text-gray-600 dark:text-gray-400" data-i18n="about.description"></p>
             </div>
         </section>
 
         <section id="contacto" class="py-20 bg-white dark:bg-gray-800">
             <div class="container mx-auto px-6 text-center animate-on-scroll">
-                <span class="text-blue-600 font-semibold">Hablemos</span>
-                <h3 class="text-3xl font-bold mt-2 mb-4">Ponte en Contacto</h3>
-                <p class="text-gray-500 mb-8">¿Tienes preguntas o necesitas una demo? Nuestro equipo está listo para ayudarte.</p>
+                <span class="text-blue-600 font-semibold" data-i18n="contact.tagline"></span>
+                <h3 class="text-3xl font-bold mt-2 mb-4" data-i18n="contact.title"></h3>
+                <p class="text-gray-500 mb-8" data-i18n="contact.subtitle"></p>
                 <div class="max-w-xl mx-auto text-left">
-                     <a href="https://wa.me/573001234567?text=Hola,%20quisiera%20más%20información%20sobre%20Suite%20Empresarial." target="_blank" class="w-full mb-6 bg-green-500 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center">
-                        <i data-feather="message-circle" class="mr-3"></i> Chatea con nosotros por WhatsApp
+                     <a href="https://wa.me/573001234567?text=Hola,%20quisiera%20más%20información%20sobre%20Suite%20Empresarial." target="_blank" class="w-full mb-6 bg-green-500 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-green-600 transition-colors flex items-center justify-center" data-i18n="contact.whatsapp_cta">
                     </a>
-                    <p class="text-center text-gray-500 mb-6">O envíanos un mensaje a través de este formulario:</p>
+                    <p class="text-center text-gray-500 mb-6" data-i18n="contact.form_intro"></p>
                     <form>
                         <div class="mb-4">
-                            <label for="name" class="block text-sm font-medium mb-1">Nombre</label>
+                            <label for="name" class="block text-sm font-medium mb-1" data-i18n="contact.form.name"></label>
                             <input type="text" id="name" name="name" class="w-full border rounded-md p-2 dark:bg-gray-700">
                         </div>
                         <div class="mb-4">
-                            <label for="email" class="block text-sm font-medium mb-1">Correo Electrónico</label>
+                            <label for="email" class="block text-sm font-medium mb-1" data-i18n="contact.form.email"></label>
                             <input type="email" id="email" name="email" class="w-full border rounded-md p-2 dark:bg-gray-700">
                         </div>
                         <div class="mb-4">
-                            <label for="message" class="block text-sm font-medium mb-1">Mensaje</label>
+                            <label for="message" class="block text-sm font-medium mb-1" data-i18n="contact.form.message"></label>
                             <textarea id="message" name="message" rows="4" class="w-full border rounded-md p-2 dark:bg-gray-700"></textarea>
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors">
-                            Enviar Mensaje
+                        <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-colors" data-i18n="contact.form.submit">
                         </button>
                     </form>
                 </div>
@@ -228,19 +229,19 @@
                         <i data-feather="briefcase" class="h-10 w-10 text-blue-500"></i>
                         <h4 class="text-2xl font-bold ml-3">Suite Empresarial</h4>
                     </div>
-                    <p class="text-gray-400">Simplificando la gestión para empresas en Colombia.</p>
+                    <p class="text-gray-400" data-i18n="footer.description"></p>
                 </div>
                 <div>
-                    <h5 class="font-semibold mb-4">Navegación</h5>
+                    <h5 class="font-semibold mb-4" data-i18n="footer.navigation.title"></h5>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="#modulos" class="hover:text-white">Módulos</a></li>
-                        <li><a href="#precios" class="hover:text-white">Planes</a></li>
-                        <li><a href="#nosotros" class="hover:text-white">Nosotros</a></li>
-                        <li><a href="#contacto" class="hover:text-white">Contacto</a></li>
+                        <li><a href="#modulos" class="hover:text-white" data-i18n="footer.navigation.modules"></a></li>
+                        <li><a href="#precios" class="hover:text-white" data-i18n="footer.navigation.plans"></a></li>
+                        <li><a href="#nosotros" class="hover:text-white" data-i18n="footer.navigation.about"></a></li>
+                        <li><a href="#contacto" class="hover:text-white" data-i18n="footer.navigation.contact"></a></li>
                     </ul>
                 </div>
                 <div>
-                    <h5 class="font-semibold mb-4">Síguenos</h5>
+                    <h5 class="font-semibold mb-4" data-i18n="footer.follow.title"></h5>
                     <div class="flex space-x-4">
                         <a href="#" class="text-gray-400 hover:text-white" title="Facebook"><i data-feather="facebook"></i></a>
                         <a href="#" class="text-gray-400 hover:text-white" title="Instagram"><i data-feather="instagram"></i></a>
@@ -249,7 +250,7 @@
                 </div>
             </div>
             <div class="mt-8 border-t border-gray-700 pt-6 text-center text-gray-500">
-                <p>&copy; 2025 Suite Empresarial. Todos los derechos reservados.</p>
+                <p data-i18n="footer.copyright"></p>
             </div>
         </div>
     </footer>

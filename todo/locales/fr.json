@@ -1,0 +1,95 @@
+{
+    "page": {
+        "title": "Suite d'Entreprise - Votre Entreprise, Simplifiée"
+    },
+    "header": {
+        "modules": "Modules",
+        "plans": "Forfaits",
+        "about": "À propos",
+        "contact": "Contact",
+        "try_free": "Essai Gratuit",
+        "login": "Connexion"
+    },
+    "hero": {
+        "title": "L'Outil Ultime pour Votre Entreprise",
+        "subtitle": "Centralisez, automatisez et optimisez chaque secteur de votre entreprise avec notre plateforme tout-en-un. Des finances aux ventes, tout est sous contrôle.",
+        "view_plans": "Voir les Forfaits"
+    },
+    "modules": {
+        "tagline": "Tout en un seul endroit",
+        "title": "Une Solution Complète pour Chaque Besoin",
+        "subtitle": "Explorez les modules conçus pour dynamiser chaque facette de vos opérations quotidiennes.",
+        "billing": { "title": "Facturation", "desc": "Créez, envoyez et gérez les factures, les notes de crédit et plus encore." },
+        "collections": { "title": "Recouvrement", "desc": "Améliorez votre flux de trésorerie avec un suivi proactif de votre portefeuille." },
+        "purchases": { "title": "Achats", "desc": "Gérez les fournisseurs et contrôlez vos bons de commande." },
+        "treasury": { "title": "Trésorerie", "desc": "Contrôlez les flux de trésorerie, les banques et les rapprochements bancaires." },
+        "payroll": { "title": "Paie", "desc": "Automatisez le calcul et le paiement de la paie de vos employés." },
+        "hr": { "title": "Ressources Humaines", "desc": "Gérez le cycle de vie de vos employés et leurs documents." },
+        "crm": { "title": "CRM & Ventes", "desc": "Transformez les prospects en clients et gérez vos relations." },
+        "pos": { "title": "Point de Vente (PDV)", "desc": "Accélérez vos ventes en magasin avec une interface rapide et intégrée." },
+        "inventory": { "title": "Inventaire", "desc": "Optimisez votre stock, gérez les entrepôts et évitez les pertes." },
+        "ohs": { "title": "SST", "desc": "Respectez la réglementation et gérez la santé et la sécurité au travail." },
+        "callcenter": { "title": "Centre d'Appels", "desc": "Gérez les appels, les agents et les tâches de votre centre de service." },
+        "reports": { "title": "Rapports de Gestion", "desc": "Obtenez une vue à 360° de votre entreprise avec des indicateurs en temps réel." }
+    },
+    "plans": {
+        "tagline": "Forfaits Flexibles",
+        "title": "Choisissez le Forfait Parfait pour Vous",
+        "subtitle": "Commencez gratuitement ou évoluez avec nos solutions professionnelles. Sans contrats à long terme.",
+        "starter": {
+            "title": "Débutant",
+            "price_suffix": "/pour toujours",
+            "description": "Idéal pour les freelances ou les petites entreprises qui commencent à s'organiser.",
+            "feature1": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>1 Utilisateur</strong>",
+            "feature2": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Accès à tous les modules",
+            "feature3": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Fonctionnalité de base",
+            "feature4": "<i data-feather='x' class='h-5 w-5 text-red-500 mr-2'></i>Données stockées <strong>localement</strong>",
+            "feature5": "<i data-feather='x' class='h-5 w-5 text-red-500 mr-2'></i>Pas de stockage cloud",
+            "cta": "Commencer Gratuitement"
+        },
+        "professional": {
+            "badge": "Recommandé",
+            "title": "Professionnel",
+            "price": "Sur Mesure",
+            "description": "Pour les entreprises en croissance qui ont besoin de puissance, de sécurité et de support.",
+            "feature1": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>Utilisateurs personnalisés</strong>",
+            "feature2": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Tous les modules avec fonctions avancées",
+            "feature3": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>Stockage cloud sécurisé</strong>",
+            "feature4": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Sauvegardes automatiques",
+            "feature5": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Support prioritaire par WhatsApp et email",
+            "cta": "Contacter les Ventes"
+        }
+    },
+    "about": {
+        "tagline": "Notre Mission",
+        "title": "Autonomiser les Entreprises Colombiennes",
+        "description": "Chez Suite d'Entreprise, notre mission est de démocratiser l'accès à des outils de gestion de premier ordre. Nous croyons que la technologie doit être un allié pour la croissance, et non une barrière. C'est pourquoi nous avons développé une solution complète qui simplifie l'administration, vous permettant de vous concentrer sur ce qui compte vraiment : la croissance de votre entreprise."
+    },
+    "contact": {
+        "tagline": "Parlons-en",
+        "title": "Prenez Contact",
+        "subtitle": "Vous avez des questions ou besoin d'une démo ? Notre équipe est prête à vous aider.",
+        "whatsapp_cta": "<i data-feather='message-circle' class='mr-3'></i> Discutez avec nous sur WhatsApp",
+        "form_intro": "Ou envoyez-nous un message via ce formulaire :",
+        "form": {
+            "name": "Nom",
+            "email": "Courriel",
+            "message": "Message",
+            "submit": "Envoyer le Message"
+        }
+    },
+    "footer": {
+        "description": "Simplifier la gestion pour les entreprises en Colombie.",
+        "navigation": {
+            "title": "Navigation",
+            "modules": "Modules",
+            "plans": "Forfaits",
+            "about": "À propos",
+            "contact": "Contact"
+        },
+        "follow": {
+            "title": "Suivez-nous"
+        },
+        "copyright": "&copy; 2025 Suite d'Entreprise. Tous droits réservés."
+    }
+}

@@ -1,0 +1,95 @@
+{
+    "page": {
+        "title": "Business Suite - Your Business, Simplified"
+    },
+    "header": {
+        "modules": "Modules",
+        "plans": "Plans",
+        "about": "About Us",
+        "contact": "Contact",
+        "try_free": "Try for Free",
+        "login": "Login"
+    },
+    "hero": {
+        "title": "The Ultimate Tool for Your Business",
+        "subtitle": "Centralize, automate, and optimize every area of your company with our all-in-one platform. From finance to sales, everything is under control.",
+        "view_plans": "View Plans"
+    },
+    "modules": {
+        "tagline": "All in one place",
+        "title": "A Comprehensive Solution for Every Need",
+        "subtitle": "Explore the modules designed to enhance every aspect of your daily operations.",
+        "billing": { "title": "Billing", "desc": "Create, send, and manage invoices, credit notes, and more." },
+        "collections": { "title": "Collections", "desc": "Improve your cash flow with proactive portfolio tracking." },
+        "purchases": { "title": "Purchases", "desc": "Manage suppliers and control your purchase orders." },
+        "treasury": { "title": "Treasury", "desc": "Control cash flow, banks, and bank reconciliations." },
+        "payroll": { "title": "Payroll", "desc": "Automate the settlement and payment of your employees' payroll." },
+        "hr": { "title": "Human Resources", "desc": "Manage your employees' lifecycle and their documents." },
+        "crm": { "title": "CRM & Sales", "desc": "Turn prospects into customers and manage your relationships." },
+        "pos": { "title": "Point of Sale (POS)", "desc": "Speed up your in-store sales with a fast and integrated interface." },
+        "inventory": { "title": "Inventory", "desc": "Optimize your stock, manage warehouses, and prevent losses." },
+        "ohs": { "title": "OHS Management", "desc": "Comply with regulations and manage occupational health and safety." },
+        "callcenter": { "title": "Call Center", "desc": "Manage calls, agents, and tasks for your customer service center." },
+        "reports": { "title": "Management Reports", "desc": "Get a 360° view of your business with real-time indicators." }
+    },
+    "plans": {
+        "tagline": "Flexible Plans",
+        "title": "Choose the Perfect Plan for You",
+        "subtitle": "Start for free or scale with our professional solutions. No long-term contracts.",
+        "starter": {
+            "title": "Starter",
+            "price_suffix": "/forever",
+            "description": "Ideal for freelancers or small businesses starting to get organized.",
+            "feature1": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>1 User</strong>",
+            "feature2": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Access to all modules",
+            "feature3": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Basic functionality",
+            "feature4": "<i data-feather='x' class='h-5 w-5 text-red-500 mr-2'></i>Data stored <strong>locally</strong>",
+            "feature5": "<i data-feather='x' class='h-5 w-5 text-red-500 mr-2'></i>No cloud storage",
+            "cta": "Start for Free"
+        },
+        "professional": {
+            "badge": "Recommended",
+            "title": "Professional",
+            "price": "Customized",
+            "description": "For growing companies that need power, security, and support.",
+            "feature1": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>Custom users</strong>",
+            "feature2": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>All modules with advanced features",
+            "feature3": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i><strong>Secure cloud storage</strong>",
+            "feature4": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Automatic backups",
+            "feature5": "<i data-feather='check' class='h-5 w-5 text-green-500 mr-2'></i>Priority support via WhatsApp and email",
+            "cta": "Contact Sales"
+        }
+    },
+    "about": {
+        "tagline": "Our Mission",
+        "title": "Empowering Colombian Businesses",
+        "description": "At Business Suite, our mission is to democratize access to top-tier management tools. We believe technology should be an ally for growth, not a barrier. That's why we've developed a comprehensive solution that simplifies administration, allowing you to focus on what really matters: growing your business."
+    },
+    "contact": {
+        "tagline": "Let's Talk",
+        "title": "Get in Touch",
+        "subtitle": "Have questions or need a demo? Our team is ready to help you.",
+        "whatsapp_cta": "<i data-feather='message-circle' class='mr-3'></i> Chat with us on WhatsApp",
+        "form_intro": "Or send us a message through this form:",
+        "form": {
+            "name": "Name",
+            "email": "Email",
+            "message": "Message",
+            "submit": "Send Message"
+        }
+    },
+    "footer": {
+        "description": "Simplifying management for businesses in Colombia.",
+        "navigation": {
+            "title": "Navigation",
+            "modules": "Modules",
+            "plans": "Plans",
+            "about": "About Us",
+            "contact": "Contact"
+        },
+        "follow": {
+            "title": "Follow Us"
+        },
+        "copyright": "&copy; 2025 Business Suite. All rights reserved."
+    }
+}
