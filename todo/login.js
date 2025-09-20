@@ -1,10 +1,11 @@
-import { db } from './db.js';
+// ELIMINADO: Ya no se importa la base de datos local
+// import { db } from './db.js';
 import { translations } from './translations.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     feather.replace();
 
-    // --- LÓGICA DE INTERNACIONALIZACIÓN (I18N) ---
+    // --- LÓGICA DE INTERNACIONALIZACIÓN (I18N) (Sin cambios) ---
     const languageSelector = document.getElementById('language-selector');
 
     const setLanguage = (lang) => {
@@ -13,16 +14,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         elements.forEach(el => {
             const key = el.getAttribute('data-translate');
-            el.textContent = translations[lang][key];
+            if (translations[lang] && translations[lang][key]) {
+                el.textContent = translations[lang][key];
+            }
         });
 
         placeholderElements.forEach(el => {
             const key = el.getAttribute('data-translate-placeholder');
-            el.setAttribute('placeholder', translations[lang][key]);
+            if (translations[lang] && translations[lang][key]) {
+                el.setAttribute('placeholder', translations[lang][key]);
+            }
         });
         
         document.documentElement.lang = lang;
-        // Se usa 'lang' para ser consistente con la página principal
         localStorage.setItem('lang', lang);
         languageSelector.value = lang;
     };
@@ -31,11 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         setLanguage(e.target.value);
     });
 
-    // Se lee 'lang' para ser consistente con la página principal
     const savedLanguage = localStorage.getItem('lang') || 'es';
     setLanguage(savedLanguage);
 
-    // --- LÓGICA PARA EL TEMA (CLARO/OSCURO) ---
+    // --- LÓGICA PARA EL TEMA (CLARO/OSCURO) (Sin cambios) ---
     const themeToggle = document.getElementById('theme-toggle');
     const applyTheme = (theme) => {
         document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -50,23 +53,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         applyTheme(newTheme);
     });
 
-    // --- LÓGICA DE AUTENTICACIÓN ---
+    // --- LÓGICA DE AUTENTICACIÓN (Modificada para usar API) ---
 
-    const hashPassword = async (password) => {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(password);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        return hashHex;
-    };
+    // NUEVO: URL del servidor backend
+    const API_URL = 'http://localhost:3000/api';
 
-    const verifyPassword = async (password, storedHash) => {
-        const hashedInput = await hashPassword(password);
-        return hashedInput === storedHash;
-    };
-    
-    await db.open();
+    // ELIMINADO: Las funciones hashPassword y verifyPassword ya no son necesarias en el cliente.
+    // El backend se encarga de la verificación segura.
 
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
@@ -79,37 +72,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const currentLang = localStorage.getItem('lang') || 'es';
 
-        let user = await db.admins.where({ username }).first();
-        
-        if (!user) {
-            user = await db.appUsers.where({ username }).first();
-        }
+        try {
+            // Se envía una petición POST al endpoint de login del servidor
+            const response = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await response.json();
 
-        if (user && await verifyPassword(password, user.passwordHash)) {
-            
-            if (user.role !== 'superadmin' && user.status === 'Inactivo') {
-                alert(translations[currentLang].inactiveAccountError);
-                loginError.textContent = translations[currentLang].inactiveAccountShortError;
-                return;
-            }
-            
-            localStorage.setItem('loggedInUser', JSON.stringify({ 
-                username: user.username, 
-                role: user.role, 
-                id: user.id,
-                adminId: user.adminId || null
-            }));
-            
-            if (user.role === 'superadmin') {
-                window.location.href = './superadmin.html';
-            } else if (user.role === 'admin') {
-                window.location.href = './admins.html'; 
+            if (response.ok) {
+                // Si la respuesta es exitosa (código 200-299)
+                const user = result.user;
+                
+                // Guardamos los datos del usuario logueado en localStorage
+                localStorage.setItem('loggedInUser', JSON.stringify({ 
+                    username: user.username, 
+                    role: user.role, 
+                    id: user.id,
+                    adminId: user.adminId || null
+                }));
+                
+                // Redirigimos según el rol del usuario
+                if (user.role === 'superadmin') {
+                    window.location.href = './superadmin.html';
+                } else if (user.role === 'admin') {
+                    window.location.href = './admins.html'; 
+                } else {
+                    window.location.href = './plan gratis/inicio.html';
+                }
+
             } else {
-                window.location.href = './plan_de_pago/inicio.html';
+                // Si hay un error (código 401, 403, 500, etc.)
+                // Mostramos el mensaje de error que nos envía el servidor
+                loginError.textContent = result.message || translations[currentLang].wrongCredentialsError;
             }
-
-        } else {
-            loginError.textContent = translations[currentLang].wrongCredentialsError;
+        } catch (error) {
+            // Error de red (el servidor no está corriendo, etc.)
+            console.error('Error de conexión:', error);
+            loginError.textContent = 'No se pudo conectar al servidor. Inténtalo de nuevo más tarde.';
         }
     });
 });

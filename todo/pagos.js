@@ -1,10 +1,11 @@
 // Archivo: todo/pagos.js
-import { db } from './db.js';
+// ELIMINADO: Ya no se necesita la importación de la base de datos local.
+// import { db } from './db.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     feather.replace();
 
-    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN ---
+    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN (sin cambios) ---
     const sidebar = document.getElementById('sidebar');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     if (window.innerWidth >= 768) {
@@ -38,7 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     
-    // --- SELECTORES Y ESTADO ---
+    // --- NUEVO: URL base de la API ---
+    const API_URL = 'http://localhost:3000/api';
+
+    // --- SELECTORES Y ESTADO (sin cambios) ---
     const dom = {
         tableBody: document.getElementById('payments-table-body'),
         searchInput: document.getElementById('search-input'),
@@ -68,10 +72,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     let revenueChartInstance = null;
     const formatCurrency = (value) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(value);
 
-    // --- RENDERIZADO PRINCIPAL ---
+    // --- RENDERIZADO PRINCIPAL (Modificado para usar API) ---
     const renderPage = async () => {
-        const admins = await db.admins.where('role').equals('admin').toArray();
-        const payments = await db.paymentHistory.toArray();
+        // Obtenemos los datos desde el servidor en lugar de Dexie
+        const adminsResponse = await fetch(`${API_URL}/admins`);
+        const allAdmins = await adminsResponse.json();
+        const admins = allAdmins.filter(a => a.role === 'admin'); // Nos aseguramos de manejar solo administradores
+
+        const paymentsResponse = await fetch(`${API_URL}/paymentHistory`);
+        const payments = await paymentsResponse.json();
         
         updateKPIs(admins, payments);
         renderRevenueChart(payments);
@@ -90,7 +99,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     
     const renderRevenueChart = async (paymentsData) => {
-        const payments = paymentsData || await db.paymentHistory.toArray();
+        // Esta función puede recibir los datos directamente para no tener que pedirlos a la API de nuevo
+        const payments = paymentsData || (await (await fetch(`${API_URL}/paymentHistory`)).json());
         const monthlyRevenue = {};
         for (let i = 5; i >= 0; i--) {
             const d = new Date();
@@ -167,8 +177,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const openHistoryModal = async (adminId) => {
-        const admin = await db.admins.get(adminId);
-        const history = await db.paymentHistory.where({ adminId }).reverse().toArray();
+        const adminResponse = await fetch(`${API_URL}/admins/${adminId}`);
+        const admin = await adminResponse.json();
+
+        const paymentsResponse = await fetch(`${API_URL}/paymentHistory`);
+        const allPayments = await paymentsResponse.json();
+        const history = allPayments.filter(p => p.adminId === adminId).sort((a, b) => new Date(b.paymentDate) - new Date(a.paymentDate));
+
         dom.historyModal.title.textContent = `Historial de ${admin.username}`;
         if (history.length === 0) {
             dom.historyModal.content.innerHTML = `<p class="text-gray-500">No hay pagos registrados.</p>`;
@@ -223,18 +238,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             status: 'Pagado'
         };
 
-        if (data['payment-id']) { // Editando
-            await db.paymentHistory.update(parseInt(data['payment-id']), paymentData);
-            showNotification('Pago actualizado correctamente.', 'success');
-        } else { // Creando
-            await db.paymentHistory.add(paymentData);
-            await db.admins.update(paymentData.adminId, { status: 'Activo' });
+        const paymentId = data['payment-id'];
+        const method = paymentId ? 'PUT' : 'POST';
+        const url = paymentId ? `${API_URL}/paymentHistory/${paymentId}` : `${API_URL}/paymentHistory`;
+
+        await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(paymentData)
+        });
+
+        // Si es un nuevo pago, actualizamos el estado del admin a 'Activo'
+        if (!paymentId) {
+            await fetch(`${API_URL}/admins/${paymentData.adminId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                // Solo enviamos el campo que queremos cambiar
+                body: JSON.stringify({ status: 'Activo' })
+            });
             showNotification('Pago registrado y cuenta activada.', 'success');
+        } else {
+            showNotification('Pago actualizado correctamente.', 'success');
         }
 
         dom.paymentFormModal.el.classList.add('hidden');
         await renderPage();
-        // Si el modal de historia está abierto, refrescarlo
+        // Si el modal de historial está abierto, refrescarlo
         if (!dom.historyModal.el.classList.contains('hidden')) {
             await openHistoryModal(paymentData.adminId);
         }
@@ -253,7 +282,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const editPaymentBtn = e.target.closest('.edit-payment-btn');
         if (editPaymentBtn) {
-            const payment = await db.paymentHistory.get(parseInt(editPaymentBtn.dataset.paymentId));
+            const paymentId = parseInt(editPaymentBtn.dataset.paymentId);
+            const response = await fetch(`${API_URL}/paymentHistory`);
+            const allPayments = await response.json();
+            const payment = allPayments.find(p => p.id === paymentId);
             openPaymentFormModal(parseInt(editPaymentBtn.dataset.adminId), payment);
         }
         
@@ -262,7 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (confirm('¿Estás seguro de eliminar este registro de pago?')) {
                 const paymentId = parseInt(deletePaymentBtn.dataset.paymentId);
                 const adminId = parseInt(deletePaymentBtn.dataset.adminId);
-                await db.paymentHistory.delete(paymentId);
+                await fetch(`${API_URL}/paymentHistory/${paymentId}`, { method: 'DELETE' });
                 showNotification('Registro de pago eliminado.', 'success');
                 await renderPage();
                 await openHistoryModal(adminId);
@@ -271,6 +303,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // --- INICIALIZACIÓN ---
-    await db.open();
     await renderPage();
 });

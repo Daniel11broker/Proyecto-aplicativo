@@ -1,10 +1,11 @@
 // Archivo: todo/superadmin.js
-import { db } from './db.js';
+// ELIMINADO: No necesitamos importar 'db.js' porque ahora usaremos la API.
+// import { db } from './db.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     feather.replace();
 
-    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN ---
+    // --- LÓGICA DEL MENÚ, TEMA Y AUTENTICACIÓN (sin cambios) ---
     const sidebar = document.getElementById('sidebar');
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     if (window.innerWidth >= 768) {
@@ -39,11 +40,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // --- ESTADO DE LA APLICACIÓN Y PAGINACIÓN ---
+    // --- NUEVO: URL base de la API ---
+    const API_URL = 'http://localhost:3000/api';
+
+    // --- ESTADO DE LA APLICACIÓN Y PAGINACIÓN (sin cambios) ---
     let currentPage = 1;
     const rowsPerPage = 10;
 
-    // --- SELECTORES GLOBALES ---
+    // --- SELECTORES GLOBALES (sin cambios) ---
     const dom = {
         kpi: {
             total: document.getElementById('kpi-total-admins'),
@@ -78,7 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         toastContainer: document.getElementById('toast-container')
     };
 
-    // --- FUNCIONES DE LA APLICACIÓN ---
+    // --- FUNCIONES DE LA APLICACIÓN (con cambios) ---
+
+    // (showToast y showConfirmation se quedan igual)
     const showToast = (message, type = 'success') => {
         const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
         const icon = type === 'success' ? 'check-circle' : 'alert-triangle';
@@ -100,6 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('confirm-cancel').onclick = () => dom.confirmModal.el.classList.add('hidden');
     };
     
+    // (hashPassword se queda igual)
     const hashPassword = async (password) => {
         const encoder = new TextEncoder();
         const data = encoder.encode(password);
@@ -107,7 +114,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     };
-
+    
+    // (renderPagination se queda igual)
     const renderPagination = (totalItems) => {
         const totalPages = Math.ceil(totalItems / rowsPerPage);
         dom.paginationControls.innerHTML = '';
@@ -148,13 +156,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    // MODIFICADO: Ahora obtiene datos de la API
     const renderPage = async () => {
-        const searchTerm = dom.searchInput.value.toLowerCase();
-        let allAdmins = await db.admins.toArray();
+        // En lugar de db.admins.toArray(), hacemos un fetch a nuestro endpoint
+        const response = await fetch(`${API_URL}/admins`);
+        const allAdmins = await response.json();
+
+        // El resto de la función es idéntica
         dom.kpi.total.textContent = allAdmins.length;
         dom.kpi.active.textContent = allAdmins.filter(a => a.status === 'Activo').length;
         dom.kpi.inactive.textContent = allAdmins.filter(a => a.status === 'Inactivo').length;
 
+        const searchTerm = dom.searchInput.value.toLowerCase();
         let filteredAdmins = allAdmins;
         if (searchTerm) {
             filteredAdmins = allAdmins.filter(admin => admin.username.toLowerCase().includes(searchTerm));
@@ -184,6 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPagination(filteredAdmins.length);
     };
 
+    // (toggleUserLimitField y openFormModal se quedan igual)
     const toggleUserLimitField = (role) => {
         if (role === 'superadmin') {
             dom.modal.userLimitContainer.classList.add('hidden');
@@ -191,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             dom.modal.userLimitContainer.classList.remove('hidden');
         }
     };
-
+    
     const openFormModal = (admin = null) => {
         dom.modal.form.reset();
         if (admin) {
@@ -216,6 +230,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         dom.modal.el.classList.remove('hidden');
     };
 
+    // --- MANEJO DE EVENTOS (con cambios) ---
+
     dom.searchInput.addEventListener('input', () => {
         currentPage = 1;
         renderPage();
@@ -228,23 +244,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     dom.tableBody.addEventListener('click', async (e) => {
         const editButton = e.target.closest('.edit-btn');
         if (editButton) {
-            const admin = await db.admins.get(parseInt(editButton.dataset.id));
+            // MODIFICADO: Obtiene el admin desde la API
+            const response = await fetch(`${API_URL}/admins/${parseInt(editButton.dataset.id)}`);
+            const admin = await response.json();
             openFormModal(admin);
         }
+
         const deleteButton = e.target.closest('.delete-btn');
         if (deleteButton) {
             const adminId = parseInt(deleteButton.dataset.id);
-            const admin = await db.admins.get(adminId);
-            showConfirmation('Confirmar Eliminación', `¿Estás seguro de eliminar a '${admin.username}'?`, async () => {
-                await db.admins.delete(adminId);
-                await db.paymentHistory.where({ adminId }).delete();
-                await db.appUsers.where({ adminId }).delete(); 
-                showToast(`Administrador '${admin.username}' eliminado.`, 'success');
+            showConfirmation('Confirmar Eliminación', `¿Estás seguro de eliminar este administrador?`, async () => {
+                // MODIFICADO: Envía la petición DELETE a la API
+                await fetch(`${API_URL}/admins/${adminId}`, { method: 'DELETE' });
+                showToast(`Administrador eliminado.`, 'success');
                 await renderPage();
             });
         }
     });
 
+    // MODIFICADO: El formulario ahora envía los datos a la API
     dom.modal.form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = dom.modal.idInput.value;
@@ -262,26 +280,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         }
+
         const data = { username, role, status, userLimit };
-        if (id) {
-            if (password) {
-                data.passwordHash = await hashPassword(password);
-            }
-            await db.admins.update(parseInt(id), data);
-            showToast(`'${username}' actualizado.`, 'success');
-        } else {
-            if (!password) {
-                showToast('La contraseña es requerida.', 'error');
-                return;
-            }
+        if (password) {
             data.passwordHash = await hashPassword(password);
-            await db.admins.add(data);
-            showToast(`'${username}' creado con éxito.`, 'success');
         }
-        dom.modal.el.classList.add('hidden');
-        await renderPage();
+
+        const url = id ? `${API_URL}/admins/${id}` : `${API_URL}/admins`;
+        const method = id ? 'PUT' : 'POST';
+
+        // Usamos fetch para enviar los datos al backend
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            showToast(id ? `'${username}' actualizado.` : `'${username}' creado con éxito.`, 'success');
+            dom.modal.el.classList.add('hidden');
+            await renderPage();
+        } else {
+            const errorData = await response.json();
+            showToast(`Error: ${errorData.error}`, 'error');
+        }
     });
 
-    await db.open();
+    // --- INICIALIZACIÓN ---
+    // ELIMINADO: Ya no necesitamos abrir la base de datos local
+    // await db.open();
     await renderPage();
 });
